@@ -19,3 +19,5 @@ python3 hand.py
 - Revisit what should be organized into MVP, Should, Future 
 - Make all the tasks into issues 
 
+## Material: 
+- use [FluidSynth](https://www.fluidsynth.org/) for the synthesizer? or a real synthesizer? 
