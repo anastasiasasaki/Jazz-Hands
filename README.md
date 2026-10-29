@@ -15,6 +15,11 @@ python -m pip install mediapipe opencv-python
 python3 hand.py        
 ```
 
+Install FluidSynth with homebrew on Mac: 
+```
+brew install fluidsynth
+```
+
 ## TODO: 
 - Revisit what should be organized into MVP, Should, Future 
 - Make all the tasks into issues 
