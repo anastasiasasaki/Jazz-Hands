@@ -37,6 +37,20 @@ cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
 
+# setup for built-in gesture recognition
+BaseOptions = mp.tasks.BaseOptions
+GestureRecognizer = mp.tasks.vision.GestureRecognizer
+GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
+VisionRunningMode = mp.tasks.vision.RunningMode
+
+gr_options = GestureRecognizerOptions(
+    base_options=BaseOptions(model_asset_path="gesture_recognizer.task"),
+    running_mode=VisionRunningMode.IMAGE,
+    num_hands=2,
+)
+
+volume = 25
+
 start = time.time()
 last_ts = -1
 while True:
@@ -45,7 +59,7 @@ while True:
         break
     # Mirror the image like a selfie view. If Left/Right look swapped on
     # your screen, comment out this line.
-    frame = cv2.flip(frame, 1)
+    # frame = cv2.flip(frame, 1)
 
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
@@ -63,6 +77,15 @@ while True:
         label = handedness[0].category_name  # "Left" or "Right"
         cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
+
+    # display volume on frame
+    cv2.putText(frame, f"Volume: {volume}", (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 140, 40), 2)
+
+    # volume and pitch control
+    with GestureRecognizer().create_from_options(gr_options) as recognizer:
+        if(recognizer.recognize(mp_image) == "Pointing_Up"):
+            # stuff go here
+
 
     cv2.imshow("Hand demo (press q to quit)", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
