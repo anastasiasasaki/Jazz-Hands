@@ -49,6 +49,10 @@ gr_options = GestureRecognizerOptions(
     num_hands=2,
 )
 
+# setup for index tip
+mp_hands = mp.solutions.hands
+hands = mp_hands.Hands()
+
 volume = 25
 
 start = time.time()
@@ -84,7 +88,8 @@ while True:
     # volume and pitch control
     with GestureRecognizer().create_from_options(gr_options) as recognizer:
         if(recognizer.recognize(mp_image) == "Pointing_Up"):
-            # stuff go here
+            # puts the index fingie into a variable, grab points from this
+            index_tip = result.hand_landmarks.landmark[mp_hands.HandLandmark.INDEX_FINGER_TIP]
 
 
     cv2.imshow("Hand demo (press q to quit)", frame)
