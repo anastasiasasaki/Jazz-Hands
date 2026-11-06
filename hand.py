@@ -60,19 +60,19 @@ with mido.open_output('Jazz Hands Port', virtual=True) as port:
         result = landmarker.detect_for_video(mp_image, ts)
 
 
-        # MIDI OUTPUT STUFFF
-        if result.hand_landmarks:
-            y = result.hand_landmarks[0][8].y
-            new_note = 48 + int((1 - y) * 24)
-        else:
-            new_note = None
-
-        if new_note != current_note:
-            if current_note is not None:
-                port.send(mido.Message('note_off', note = current_note))
-            if new_note is not None:
-                port.send(mido.Message('note_on', note = new_note, velocity = 64))
-                current_note = new_note
+        # # MIDI OUTPUT TEST
+        # if result.hand_landmarks:
+        #     y = result.hand_landmarks[0][8].y
+        #     new_note = 48 + int((1 - y) * 24)
+        # else:
+        # #     new_note = None
+        # 
+        # if new_note != current_note:
+        #     if current_note is not None:
+        #         port.send(mido.Message('note_off', note = current_note))
+        #     if new_note is not None:
+        #         port.send(mido.Message('note_on', note = new_note, velocity = 64))
+        #         current_note = new_note
 
             
 
