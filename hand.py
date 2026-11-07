@@ -1,7 +1,7 @@
 import os
 import time
 import urllib.request
-import mido
+from midi_out import MidiOut
 
 import cv2
 import mediapipe as mp
@@ -40,11 +40,10 @@ cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
 
-current_note = None # for midi output
 start = time.time()
 last_ts = -1
 # open virtual midi port
-with mido.open_output('Jazz Hands Port', virtual=True) as port:
+with MidiOut() as midi:
     while True:
         ok, frame = cap.read()
         if not ok:
@@ -60,20 +59,12 @@ with mido.open_output('Jazz Hands Port', virtual=True) as port:
         result = landmarker.detect_for_video(mp_image, ts)
 
 
-        # # MIDI OUTPUT TEST
-        # if result.hand_landmarks:
-        #     y = result.hand_landmarks[0][8].y
-        #     new_note = 48 + int((1 - y) * 24)
-        # else:
-        # #     new_note = None
-        # 
-        # if new_note != current_note:
-        #     if current_note is not None:
-        #         port.send(mido.Message('note_off', note = current_note))
-        #     if new_note is not None:
-        #         port.send(mido.Message('note_on', note = new_note, velocity = 64))
-        #         current_note = new_note
-
+        # MIDI OUTPUT TEST
+        if result.hand_landmarks:
+            y = result.hand_landmarks[0][8].y
+            midi.play(48 + int((1-y) * 24))
+        else:
+            midi.play(None)
             
 
         h, w = frame.shape[:2]
@@ -90,7 +81,6 @@ with mido.open_output('Jazz Hands Port', virtual=True) as port:
         cv2.imshow("Hand demo (press q to quit)", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
-    port.reset() # stop midi output
     
 cap.release()
 cv2.destroyAllWindows()
