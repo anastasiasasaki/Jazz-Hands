@@ -17,33 +17,44 @@ NOTES = {'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#
 
 
 
+# makes chords
+def chord(quality, root, octave = 3):
+    
+    if quality not in CHORDS:
+        raise ValueError(f"Unknown chord {quality!r}, pick one of {list(CHORDS)}")
+
+    if isinstance(root, int):
+        root_note = root
+    elif root in NOTES:
+        root_note = 12 * (octave + 1) + NOTES[root]
+    else:
+        raise ValueError(f"Unknown root {root!r}")
+    
+    return [root_note + i for i in CHORDS[quality]]
 
 
 class MidiOut:
-    def __init__(self, name = 'Jass Hands Port'):
+    def __init__(self, name = 'Jazz Hands Port'):
         self.port = mido.open_output(name, virtual=True)
-        self.current_note = None
+        self.current_notes = []
 
-    # plays one note
-    def play(self, note):
-        if note == self.current_note:
+    # plays a chord or single note
+    # play None for silence
+    def play(self, notes):
+        if notes is None:
+            notes = []
+        elif isinstance(notes, int):
+            notes = [notes]
+        if notes == self.current_notes:
             return
-        if self.current_note is not None:
-            self.port.send(mido.Message('note_off', note = self.current_note))
-        if note is not None:
-            self.port.send(mido.Message('note_on', note = note, velocity = 64))
-        self.current_note = note
+        for n in self.current_notes:
+            self.port.send(mido.Message('note_off', note=n))
+        for n in notes:
+            self.port.send(mido.Message('note_on', note=n, velocity = 64))
+        self.current_notes = notes
 
-    # plays a chord based on note 
-    def chord(quality, root, octave = 3):
-        if quality not in CHORDS:
-            raise ValueError(f"Unknown chord {quality!r}, pick one of {list(CHORDS)}")
-        root_note = 12 * (octave + 1) + NOTES[root]
-        return [root + i for i in CHORDS[quality]]
+
         
-
-
-
     # these allow it to work with a 'with' block
     def __enter__(self):
         return self

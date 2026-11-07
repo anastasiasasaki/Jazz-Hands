@@ -1,7 +1,7 @@
 import os
 import time
 import urllib.request
-from midi_out import MidiOut
+from midi_out import MidiOut, chord
 
 import cv2
 import mediapipe as mp
@@ -36,6 +36,7 @@ CONNECTIONS = [
     (0, 17),                                 # palm edge
 ]
 
+
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
@@ -59,10 +60,22 @@ with MidiOut() as midi:
         result = landmarker.detect_for_video(mp_image, ts)
 
 
+        # # FORMATS FOR MIDI OUTPUT
+        # midi.play(48) # plays C
+        # midi.play(None) # stops output
+        # midi.play(chord('maj7', 'C')) # plays C7 major
+        # midi.play(chord('maj7', 'C', 2)) # plays C7 major one octave down
+        # # check midi_out.py for all the chord names
+        # midi.play(chord('maj7', 48)) # plays C7 major
+        # NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound.
+                        
         # MIDI OUTPUT TEST
         if result.hand_landmarks:
-            y = result.hand_landmarks[0][8].y
-            midi.play(48 + int((1-y) * 24))
+            # midi.play(chord('maj7', 'C'))
+            # midi.play(48)
+            # midi.play(chord('maj7', 48))
+            # midi.play(chord('maj7', 'C'))
+            midi.play(chord('maj7', 'C', 4))
         else:
             midi.play(None)
             
