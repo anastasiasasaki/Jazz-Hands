@@ -65,11 +65,11 @@ with MidiOut() as midi:
         # midi.play(None) # stops output
         # midi.play(chord('maj7', 'C')) # plays C7 major
         # midi.play(chord('maj7', 'C', 2)) # plays C7 major one octave down
-        # # check midi_out.py for all the chord names
+        # # check midi_out.py for all the chord and note names
         # midi.play(chord('maj7', 48)) # plays C7 major
-        # NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound.
+        # NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound. (as long as your hand is visible)
                         
-        # MIDI OUTPUT TEST
+        # MIDI OUTPUT DEMO
         if result.hand_landmarks:
             # midi.play(chord('maj7', 'C'))
             # midi.play(48)
