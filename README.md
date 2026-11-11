@@ -13,17 +13,14 @@ source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install mediapipe opencv-python
 pip install mido python-rtmidi
-python3 hand.py        
+python3 hand.py
 ```
 
-Install FluidSynth with homebrew on Mac: 
-```
-brew install fluidsynth
-```
 
 ## TODO: 
 - Revisit what should be organized into MVP, Should, Future 
 - Make all the tasks into issues 
 
 ## Material: 
-- use [FluidSynth](https://www.fluidsynth.org/) for the synthesizer? or a real synthesizer? 
+You can use any DAW or software-based musical instrument.
+https://www.onlinepianist.com/virtual-piano is an option that runs in your browser.
