@@ -3,6 +3,7 @@ import json
 import math 
 import time 
 import urllib.request
+from midi_out import MidiOut, chord
 
 import cv2
 import mediapipe as mp
@@ -124,6 +125,16 @@ last_ts = -1
 # "with MidiOut() as midi" opens the virtual MIDI port, and when the block ends (even if the program crashes) it automatically silences and closes the port, so you never get a stuck note 
 # __enter__/__exit__ in midi_out.py 
 
+# FORMATS FOR MIDI OUTPUT
+# midi.play(48) # plays C
+# midi.play(None) # stops output
+# midi.play(chord('maj7', 'C')) # plays C7 major
+# midi.play(chord('maj7', 'C', 2)) # plays C7 major one octave down
+# check midi_out.py for all the chord and note names
+# midi.play(chord('maj7', 48)) # plays C7 major
+# NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound. (as long as your hand is visible)
+
+
 with MidiOut() as midi:
     while True:
         ok, frame = cap.read()
@@ -208,36 +219,29 @@ CONNECTIONS = [
     (0, 17),                                 # palm edge
 ]
 
+
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
 
 start = time.time()
 last_ts = -1
-while True:
-    ok, frame = cap.read()
-    if not ok:
-        break
-    # Mirror the image like a selfie view. If Left/Right look swapped on
-    # your screen, comment out this line.
-    frame = cv2.flip(frame, 1)
+# open virtual midi port
+with MidiOut() as midi:
+    while True:
+        ok, frame = cap.read()
+        if not ok:
+            break
+        # Mirror the image like a selfie view. If Left/Right look swapped on
+        # your screen, comment out this line.
+        frame = cv2.flip(frame, 1)
 
-    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-    ts = max(int((time.time() - start) * 1000), last_ts + 1)  # must increase
-    last_ts = ts
-    result = landmarker.detect_for_video(mp_image, ts)
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        ts = max(int((time.time() - start) * 1000), last_ts + 1)  # must increase
+        last_ts = ts
+        result = landmarker.detect_for_video(mp_image, ts)
 
-    h, w = frame.shape[:2]
-    for landmarks, handedness in zip(result.hand_landmarks, result.handedness):
-        pts = [(int(p.x * w), int(p.y * h)) for p in landmarks]
-        for a, b in CONNECTIONS:
-            cv2.line(frame, pts[a], pts[b], (0, 255, 0), 2)
-        for p in pts:
-            cv2.circle(frame, p, 4, (0, 0, 255), -1)
-        label = handedness[0].category_name  # "Left" or "Right"
-        cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
     cv2.imshow("Hand demo (press q to quit)", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):

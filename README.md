@@ -12,6 +12,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install mediapipe opencv-python
+pip install mido python-rtmidi
 python3 hand.py        
 ```
 
