@@ -2,6 +2,6 @@
   "fist":  {"fingers": "0000", "root": "C", "quality": "maj"},
   "one":   {"fingers": "1000", "root": "D", "quality": "maj"},
   "two":   {"fingers": "1100", "root": "E", "quality": "maj"},
-  "three": {"fingers": "1110", "root": "F", "quality": "maj"},
+  "three": {"fingers": "0111", "root": "F", "quality": "maj"},
   "four":  {"fingers": "1111", "root": "G", "quality": "maj"}
 }
