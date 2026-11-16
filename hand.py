@@ -1,68 +1,96 @@
-import os
-import json 
-import math 
-import time 
+"""
+
+Jazz Hands main script aka the Hand 
+
+Left hand  -> static finger pattern picks the chord (chords.json)
+
+"""
+import json
+import math
+import time
 import urllib.request
-from midi_out import MidiOut, chord
+from collections import namedtuple
+from pathlib import Path
 
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
 
-from midi_out import MidiOut, chord
+from chord_builder import chord
+from live_overlay import show_overlay, close_overlay
+from midi_out import MidiOut
 
-MODEL_PATH = "hand_landmarker.task"
+# Files are looked up next to this script, so it works from any folder.
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "hand_landmarker.task"
+CHORDS_PATH = BASE_DIR / "chords.json"
 MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/"
              "hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task")
 
-# should fix the inverted hands issue - set to True if the labels on screen say Left for your right hand , if not leave it as is 
-SWAP_HAND = False 
+# Set to True if the labels on screen say Left for your right hand.
+SWAP_HAND = False
 
-# this is for how much farther the fingertip must be from the wrist than the middle joint before the finger counts as straight. 
-# test: increase if curled fingers are being counted as straight; lower it if straight fingers are being missed 
-EXTEND_RATIO = 1.1 
+# How much farther the fingertip must be from the wrist than the middle joint before the finger counts as straight. Raise it if curled fingers count as straight; lower it if straight fingers are missed. 
+EXTEND_RATIO = 1.1
+
+# One recognised left-hand gesture: name from chords.json, a label for the overlay
+# (e.g. "E maj") and the MIDI notes.
+Gesture = namedtuple("Gesture", ["name", "label", "notes"])
 
 
+# ---------------------------------------------------------------- 
+# setup
+# ---------------------------------------------------------------- 
 
-# Download the model file once (first run only).
-if not os.path.exists(MODEL_PATH):
-    print("Downloading model...")
-    urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+def load_gestures(path):
 
-# Load chords.json
+    # Read chords.json and return {(index, middle, ring, pinky): Gesture}.
 
-# Each entry looks like: "two": {"fingers": "1100", "root": "E", "quality": "maj"}
+    # "fingers" is 4 characters for (index, middle, ring, pinky):
+    # 1 = finger straight, 0 = finger curled. The thumb is ignored.
+    
+    gestures = {}
+    with open(path) as f:
+        for name, spec in json.load(f).items():
+            fingers = spec["fingers"]
+            if len(fingers) != 4 or set(fingers) - {"0", "1"}:
+                raise SystemExit(f'chords.json: "{name}" needs "fingers" to be '
+                                 f'4 characters of 0/1, got {fingers!r}')
 
-# "fingers" is 4 characters for (index, middle, ring, pinky): 1 = finger straight, 0 = finger curled.  ignore thumb. "0000" is a fist and "1111" is four fingers up. 4 fingers give 16 possible patterns in total. 
+            pattern = tuple(c == "1" for c in fingers)  # "1100" -> (True, True, False, False)
+            if pattern in gestures:
+                raise SystemExit(f'chords.json: "{name}" uses the same fingers as '
+                                 f'"{gestures[pattern].name}"')
 
-# GESTURES :  (index, middle, ring, pinky) -> (name, midi notes)
+            notes = chord(spec["quality"], spec["root"], spec.get("octave", 3))
+            gestures[pattern] = Gesture(name, f'{spec["root"]} {spec["quality"]}', notes)
 
-GESTURES = {}
-with open("chords.json") as f:
-    for name, spec in json.load(f).items():
-        fingers = spec["fingers"]
+    return gestures
 
-        # error out if the json file has the wrong format 
-        if len(fingers) != 4 or set(fingers) - {"0", "1"}:
-            raise SystemExit(f'chords.json: "{name}" needs "fingers" to be '
-                             f'4 characters of 0/1, got {fingers!r}')
-        
-        pattern = tuple(c == "1" for c in fingers)  # "1100" -> (True, True, False, False)
 
-        if pattern in GESTURES:
-            raise SystemExit(f'chords.json: "{name}" uses the same fingers as '
-                             f'"{GESTURES[pattern][0]}"')
-        
-        notes = chord(spec["quality"], spec["root"], spec.get("octave", 3))
-        GESTURES[pattern] = (name, notes)
+def make_landmarker():
 
-# Finger detection
+    # Download the MediaPipe model on first run, then create the hand landmarker. 
 
-# MediaPipe gives 21 landmark points per hand, numbered like this: 0 = wrist, thumb  1-4, index 5-8, middle 9-12, ring 13-16, pinky 17-20...  each finger the numbers go from the palm out to the tip:
-#   e.g. index: 5 = base knuckle, 6 = middle knuckle (the PIP joint), 7 = upper joint, 8 = fingertip
+    if not MODEL_PATH.exists():
+        print("Downloading model...")
+        urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
 
-# PIP = "proximal interphalangeal" joint = the middle knuckle of a finger, the first place the finger bends after the base knuckle ->  each pair below is (PIP joint number, fingertip number) for one finger 
+    options = vision.HandLandmarkerOptions(
+        base_options=mp_python.BaseOptions(model_asset_path=str(MODEL_PATH)),
+        running_mode=vision.RunningMode.VIDEO,
+        num_hands=2,
+    )
+
+    return vision.HandLandmarker.create_from_options(options)
+
+
+# ---------------------------------------------------------------- 
+# left hand
+# ---------------------------------------------------------------- 
+
+# MediaPipe gives 21 landmarks per hand: 0 = wrist, thumb 1-4, index 5-8, middle 9-12, ring 13-16, pinky 17-20. Each pair is (PIP joint, fingertip), where PIP is the middle knuckle of the finger. 
 
 FINGERS = [
     (6, 8),     # index
@@ -73,13 +101,10 @@ FINGERS = [
 
 def finger_states(lm):
     
-    # return (index, middle, ring, pinky) as True (straight) / False (curled)
+    # Return (index, middle, ring, pinky) as True (straight) / False (curled).
 
-    # a straight finger = its tip far from the wrist, 
-    # a curled finger = folds its tip back toward the palm, so the tip is as close to the wrist as the middle knuckle
-    # this makes sure it works when your hand is tilted or turned 
-
-
+    # A straight finger has its tip far from the wrist; a curled finger folds its tip back toward the palm, so the tip is about as close to the wrist as the middle knuckle. Comparing distances (not angles) works when the hand is tilted or turned.
+    
     def d(a, b):
         return math.hypot(a.x - b.x, a.y - b.y)
 
@@ -87,7 +112,26 @@ def finger_states(lm):
                  for pip, tip in FINGERS)
 
 
-# which landmark pairs to connect with lines (skeleton) 
+# ----------------------------------------------------------------
+# right hand  (TODO list)
+# ----------------------------------------------------------------
+
+# TODO: volume_from_height(lm) -> a whole number from 0 to 100. Pick one point on the hand (e.g. 9 = base of the middle finger). In the picture y = 0 is the top, so flip it so a higher hand means louder. Use only the middle part of the frame (e.g. 15%-85% of the height) as the 0-100 range, and smooth the number so it doesn't shake.
+
+# TODO: pitch_from_palm(lm) -> a whole number like -1 / 0 / +1 (octave down / same / up). Palm direction may be unreliable, so test first (e.g. compare the x of the wrist with the x of point 9). Make it harder to switch than to stay, so it doesn't flicker near the limit. 
+
+# TODO: in main(), handle the "Right" hand inside the hand loop. Keep the volume and pitch values outside the loop so they stay the same when the hand leaves the frame. Pass them to show_overlay(volume=..., pitch=...). Pitch must be a whole number. 
+
+# TODO: send them to MIDI. Move the chord notes by 12 for each octave before midi.play(), and change MidiOut.play() so it uses the volume (note velocity, or CC 7). 
+
+
+# ----------------------------------------------------------------
+# drawing - for the on-screen skeleton 
+# ---------------------------------------------------------------- 
+
+
+
+# Which landmark pairs to connect with lines (the hand skeleton).
 
 CONNECTIONS = [
     (0, 1), (1, 2), (2, 3), (3, 4),          # thumb
@@ -98,155 +142,128 @@ CONNECTIONS = [
     (0, 17),                                 # palm edge
 ]
 
-# set up MediaPipe. VIDEO mode = hand it one frame at a time and wait
-# needs each frame to come with a timestamp 
 
-options = vision.HandLandmarkerOptions(
-    base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
-    running_mode=vision.RunningMode.VIDEO,
-    num_hands=2,
-)
+def draw_hand(frame, lm, label):
+    
+    # Draw the skeleton and the Left/Right label on the (mirrored) frame.
 
-landmarker = vision.HandLandmarker.create_from_options(options)
+    h, w = frame.shape[:2]
+    
+    # The picture was flipped, so a point at fraction x in the raw frame is at 1 - x.
+    
+    pts = [(int((1 - p.x) * w), int(p.y * h)) for p in lm]
 
-# quit if webcame fails 
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    raise SystemExit("Could not open the webcam.")
-
-# VIDEO mode needs a timestamp in milliseconds for every frame, each new > last 
-# milliseconds since the program started 
-# last_ts force it to go up if two frames land in the same millisecond 
-
-start = time.time()
-last_ts = -1
-
-# makes sure if a program crashes it closes the port instead of playing the note that it's stuck on 
-# "with MidiOut() as midi" opens the virtual MIDI port, and when the block ends (even if the program crashes) it automatically silences and closes the port, so you never get a stuck note 
-# __enter__/__exit__ in midi_out.py 
-
-# FORMATS FOR MIDI OUTPUT
-# midi.play(48) # plays C
-# midi.play(None) # stops output
-# midi.play(chord('maj7', 'C')) # plays C7 major
-# midi.play(chord('maj7', 'C', 2)) # plays C7 major one octave down
-# check midi_out.py for all the chord and note names
-# midi.play(chord('maj7', 48)) # plays C7 major
-# NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound. (as long as your hand is visible)
+    for a, b in CONNECTIONS:
+        cv2.line(frame, pts[a], pts[b], (0, 255, 0), 2)
+    
+    for p in pts:
+        cv2.circle(frame, p, 4, (0, 0, 255), -1)
+    
+    cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
 
-with MidiOut() as midi:
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
+# ---------------------------------------------------------------- 
+# main loop
+# ---------------------------------------------------------------- 
 
-        # make sure its the raw video feed, not the flipped one
-        # OpenCV uses BGR, MediaPipe wants RGB
+def detect_hands(landmarker, frame, ts):
 
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-        ts = max(int((time.time() - start) * 1000), last_ts + 1)
-        last_ts = ts
-        result = landmarker.detect_for_video(mp_image, ts)
+    # Run MediaPipe on one raw (unflipped) BGR frame; return [(label, landmarks)]. 
 
-        # mirror the image so left hand is left and right is right 
+    rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+    result = landmarker.detect_for_video(mp_image, ts)
 
-        frame = cv2.flip(frame, 1)
-        h, w = frame.shape[:2]
+    hands = []
+    
+    for lm, handed in zip(result.hand_landmarks, result.handedness):
+        label = handed[0].category_name  # "Left" or "Right"
+        
+        if SWAP_HAND:
+            label = "Right" if label == "Left" else "Left"
+        
+        hands.append((label, lm))
+    
+    return hands
 
-        # each frame starts without a chord 
-        # gets a chord when the left hand is found && the finger pattern exists in chords.json 
+# ---------------------------------------------------------------- 
+# main
+# ---------------------------------------------------------------- 
 
-        current = None  # (name, notes)
+def main():
+    gestures = load_gestures(CHORDS_PATH)
+    landmarker = make_landmarker()
 
-        for lm, handed in zip(result.hand_landmarks, result.handedness):
-            label = handed[0].category_name  # "Left" or "Right"
+    cap = cv2.VideoCapture(0)
 
-            if SWAP_HAND:
-                label = "Right" if label == "Left" else "Left"
+    if not cap.isOpened():
+        raise SystemExit("Could not open the webcam.")
 
-            if label == "Left" and current is None:
-                current = GESTURES.get(finger_states(lm))  # if not in chords.json then None
+    # VIDEO mode needs a timestamp in ms for every frame, each one larger than the last. last_ts forces it up if two frames land in the same millisecond.
+    
+    start = time.time()
+    last_ts = -1
 
-            # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
-            # multiply by width/height to get pixels 
-            # picture was flipped, so point at fraction x in the raw frame is at 1 - x, so (1 - p.x) 
+    try:
+        # "with" silences and closes the virtual MIDI port even if the program
+        # crashes, so a note never gets stuck.
+        with MidiOut() as midi:
+            while True:
+                ok, frame = cap.read()
+                if not ok:
+                    break
 
-            pts = [(int((1 - p.x) * w), int(p.y * h)) for p in lm]
+                ts = max(int((time.time() - start) * 1000), last_ts + 1)
+                last_ts = ts
+                hands = detect_hands(landmarker, frame, ts)
 
-            for a, b in CONNECTIONS:
-                cv2.line(frame, pts[a], pts[b], (0, 255, 0), 2)
+                frame = cv2.flip(frame, 1)   # mirror so left is left on screen
 
-            for p in pts:
-                cv2.circle(frame, p, 4, (0, 0, 255), -1)
+                current = None       # Gesture, or None if no chord this frame
 
-            cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
+                # RIGHT HAND (todo): the volume and pitch values need to live outside this loop, so they keep their last value when the right hand leaves the frame (or reset to a default - decide which).
+                # Start them from a sensible default before the loop begins.
 
-        # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
-        # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
+                for label, lm in hands:
+                    if label == "Left" and current is None:
+                        current = gestures.get(finger_states(lm))
 
-        midi.play(current[1] if current else None)
+                    # RIGHT HAND (todo): handle label == "Right" here, calling the
+                    # functions from the "right hand" section above to update the
+                    # volume and pitch values.
 
-        # testing delete 
+                    draw_hand(frame, lm, label)
 
-        # text = f"Left hand: {current[0]}" if current else "Left hand: none"
-        # cv2.putText(frame, text, (20, 40),
-        #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+                # RIGHT HAND (todo): apply the pitch range to the chord notes
+                # before play() (for example shift by 12 semitones per octave and
+                # keep every note inside 0-127). MidiOut.play() only takes notes
+                # and sends a fixed velocity of 64, so volume needs a change in
+                # midi_out.py: either use the volume as note velocity (only applies
+                # when a chord starts) or send a control change message for
+                # volume (CC 7), which some synths ignore until you map it.
+                # A new note list makes play() retrigger the chord, which is fine.
 
-        cv2.imshow("Hand demo (press q to quit)", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+                # play() ignores repeats, so calling this every frame is fine.
+                midi.play(current.notes if current else None)
 
-cap.release()
-cv2.destroyAllWindows()
+                # RIGHT HAND (todo): pass volume= and pitch= to show_overlay().
+                # It already accepts both. Volume is printed with a "%" sign, and
+                # pitch must be an int, because it is formatted with ":+d" and a
+                # float would raise an error. Until then the overlay shows 0 for both.
+                keep_going = show_overlay(
+                    frame,
+                    gesture=current.name if current else "None",
+                    chord=current.label if current else "None",
+                )
 
-
-
-
-
-
-
-# delete later 
-""" # Which landmark points to connect with lines (the hand skeleton).
-CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),          # thumb
-    (0, 5), (5, 6), (6, 7), (7, 8),          # index
-    (5, 9), (9, 10), (10, 11), (11, 12),     # middle
-    (9, 13), (13, 14), (14, 15), (15, 16),   # ring
-    (13, 17), (17, 18), (18, 19), (19, 20),  # pinky
-    (0, 17),                                 # palm edge
-]
-
-
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    raise SystemExit("Could not open the webcam.")
-
-start = time.time()
-last_ts = -1
-# open virtual midi port
-with MidiOut() as midi:
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        # Mirror the image like a selfie view. If Left/Right look swapped on
-        # your screen, comment out this line.
-        frame = cv2.flip(frame, 1)
-
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-        ts = max(int((time.time() - start) * 1000), last_ts + 1)  # must increase
-        last_ts = ts
-        result = landmarker.detect_for_video(mp_image, ts)
+                if not keep_going:
+                    break
+    
+    finally:
+        cap.release()
+        close_overlay()
 
 
-    cv2.imshow("Hand demo (press q to quit)", frame)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break """
-
-
-
-
+if __name__ == "__main__":
+    main()
