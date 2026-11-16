@@ -206,8 +206,7 @@ def main():
     last_ts = -1
 
     try:
-        # "with" silences and closes the virtual MIDI port even if the program
-        # crashes, so a note never gets stuck.
+        # "with" silences and closes the virtual MIDI port even if the program crashes, so a note never gets stuck 
         with MidiOut() as midi:
             while True:
                 ok, frame = cap.read()
@@ -235,22 +234,13 @@ def main():
 
                     draw_hand(frame, lm, label)
 
-                # RIGHT HAND (todo): apply the pitch range to the chord notes
-                # before play() (for example shift by 12 semitones per octave and
-                # keep every note inside 0-127). MidiOut.play() only takes notes
-                # and sends a fixed velocity of 64, so volume needs a change in
-                # midi_out.py: either use the volume as note velocity (only applies
-                # when a chord starts) or send a control change message for
-                # volume (CC 7), which some synths ignore until you map it.
-                # A new note list makes play() retrigger the chord, which is fine.
+                # RIGHT HAND (todo): apply the pitch range to the chord notes before play() (for example shift by 12 semitones per octave and keep every note inside 0-127). MidiOut.play() only takes notes and sends a fixed velocity of 64, so volume needs a change in midi_out.py: either use the volume as note velocity (only applies when a chord starts) or send a control change message for volume (CC 7), which some synths ignore until you map it. A new note list makes play() retrigger the chord, which is fine.
 
                 # play() ignores repeats, so calling this every frame is fine.
                 midi.play(current.notes if current else None)
 
-                # RIGHT HAND (todo): pass volume= and pitch= to show_overlay().
-                # It already accepts both. Volume is printed with a "%" sign, and
-                # pitch must be an int, because it is formatted with ":+d" and a
-                # float would raise an error. Until then the overlay shows 0 for both.
+                # RIGHT HAND (todo): pass volume= and pitch= to show_overlay(). It already accepts both. Volume is printed with a "%" sign, andpitch must be an int, because it is formatted with ":+d" and a float would raise an error. Until then the overlay shows 0 for both.
+                
                 keep_going = show_overlay(
                     frame,
                     gesture=current.name if current else "None",
