@@ -51,7 +51,7 @@ def load_gestures(path):
     # 1 = finger straight, 0 = finger curled. The thumb is ignored.
     
     gestures = {}
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         for name, spec in json.load(f).items():
             fingers = spec["fingers"]
             if len(fingers) != 4 or set(fingers) - {"0", "1"}:

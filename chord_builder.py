@@ -1,7 +1,7 @@
 """
 ChordBuilder: turns chord names from chords.json into MIDI note numbers.
 
-This is the "simple factory" from section 5.5 of the report: it takes a description of what to build (quality, root, octave) and returns the result (a list of MIDI notes).
+Takes quality, root, octave and returns the a list of MIDI notes 
 """
 
 CHORDS = {

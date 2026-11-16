@@ -7,6 +7,8 @@ GitHub site: https://github.com/anastasiasasaki/Jazz-Hands
 ```git clone git@github.com:anastasiasasaki/Jazz-Hands.git``` 
 
 ## Environment setup: 
+
+Mac: 
 ```
 python3 -m venv .venv
 source .venv/bin/activate
@@ -16,6 +18,23 @@ pip install mido python-rtmidi
 python3 hand.py
 ```
 
+Windows bash: 
+```
+python -m venv .venv
+source .venv/Scripts/activate
+python -m pip install --upgrade pip
+pip install opencv-python mediapipe mido python-rtmidi
+python hand.py
+```
+
+Windows CMD: 
+```
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install opencv-python mediapipe mido python-rtmidi
+python hand.py
+```
 
 ## TODO: 
 - Revisit what should be organized into MVP, Should, Future 
