@@ -21,7 +21,6 @@ NOTES = {'C': 0, 'C#': 1, 'Db': 1, 'D': 2, 'D#': 3, 'Eb': 3, 'E': 4, 'F': 5, 'F#
 
 # makes chords
 def chord(quality, root, octave = 3):
-    
     if quality not in CHORDS:
         raise ValueError(f"Unknown chord {quality!r}, pick one of {list(CHORDS)}")
 
@@ -42,6 +41,7 @@ class MidiOut:
     def __init__(self, name='Jazz Hands Port'):
         self.current_notes = []
 
+        # fix for windows 
         if platform.system() == "Darwin":  # macOS
             self.port = mido.open_output(name, virtual=True)
         

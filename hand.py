@@ -40,7 +40,7 @@ if not os.path.exists(MODEL_PATH):
 
 GESTURES = {}
 # with open("chords.json") as f:
-with open("chords.json", encoding="utf-8") as f:
+with open("chords.json", encoding="utf-8") as f: # fix for windows 
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
 
