@@ -3,14 +3,12 @@ import json
 import math 
 import time 
 import urllib.request
-from midi_out import MidiOut, chord
-
+from midi_out import MidiOut, chord, CHORDS
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
 
-from midi_out import MidiOut, chord
 
 MODEL_PATH = "hand_landmarker.task"
 MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/"
@@ -36,9 +34,9 @@ if not os.path.exists(MODEL_PATH):
 
 # "fingers" is 4 characters for (index, middle, ring, pinky): 1 = finger straight, 0 = finger curled.  ignore thumb. "0000" is a fist and "1111" is four fingers up. 4 fingers give 16 possible patterns in total. 
 
-# GESTURES :  (index, middle, ring, pinky) -> (name, midi notes)
-
-GESTURES = {}
+# GESTURES_LEFT_HAND :  (index, middle, ring, pinky) -> (name, midi notes)
+# this gets the chord quality
+GESTURES_LEFT_HAND = {}
 with open("chords.json") as f:
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
@@ -50,12 +48,33 @@ with open("chords.json") as f:
         
         pattern = tuple(c == "1" for c in fingers)  # "1100" -> (True, True, False, False)
 
-        if pattern in GESTURES:
+        if pattern in GESTURES_LEFT_HAND:
             raise SystemExit(f'chords.json: "{name}" uses the same fingers as '
-                             f'"{GESTURES[pattern][0]}"')
+                             f'"{GESTURES_LEFT_HAND[pattern][0]}"')
         
-        notes = chord(spec["quality"], spec["root"], spec.get("octave", 3))
-        GESTURES[pattern] = (name, notes)
+        GESTURES_LEFT_HAND[pattern] = (name, spec["quality"])
+
+        if spec["quality"] not in CHORDS:
+            raise SystemExit(f'chords.json: "{name}" has unknown quality {spec["quality"]!r}')
+
+# this gets the root of the chord
+GESTURES_RIGHT_HAND = {}
+with open("roots.json") as f:
+    for name, spec in json.load(f).items():
+        fingers = spec["fingers"]
+
+        # error out if the json file has the wrong format 
+        if len(fingers) != 4 or set(fingers) - {"0", "1"}:
+            raise SystemExit(f'roots.json: "{name}" needs "fingers" to be '
+                             f'4 characters of 0/1, got {fingers!r}')
+        
+        pattern = tuple(c == "1" for c in fingers)  # "1100" -> (True, True, False, False)
+
+        if pattern in GESTURES_RIGHT_HAND:
+            raise SystemExit(f'roots.json: "{name}" uses the same fingers as '
+                             f'"{GESTURES_RIGHT_HAND[pattern][0]}"')
+        
+        GESTURES_RIGHT_HAND[pattern] = (name, spec["root"])
 
 # Finger detection
 
@@ -158,7 +177,8 @@ with MidiOut() as midi:
         # each frame starts without a chord 
         # gets a chord when the left hand is found && the finger pattern exists in chords.json 
 
-        current = None  # (name, notes)
+        quality = None # (name, "maj") from left hand
+        root = None # (name, "C") from right hand
 
         for lm, handed in zip(result.hand_landmarks, result.handedness):
             label = handed[0].category_name  # "Left" or "Right"
@@ -166,8 +186,12 @@ with MidiOut() as midi:
             if SWAP_HAND:
                 label = "Right" if label == "Left" else "Left"
 
-            if label == "Left" and current is None:
-                current = GESTURES.get(finger_states(lm))  # if not in chords.json then None
+            if label == "Left" and quality is None:
+                quality = GESTURES_LEFT_HAND.get(finger_states(lm))
+
+            if label == "Right":
+                root = GESTURES_RIGHT_HAND.get(finger_states(lm))
+                
 
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
             # multiply by width/height to get pixels 
@@ -187,13 +211,18 @@ with MidiOut() as midi:
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
 
-        midi.play(current[1] if current else None)
+        if quality and root:
+            midi.play(chord(quality[1], root[1]))
+        else:
+            midi.play(None)
 
         # testing delete 
 
         # text = f"Left hand: {current[0]}" if current else "Left hand: none"
-        # cv2.putText(frame, text, (20, 40),
-        #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        # if quality and root:
+        #     text = f"Chord: {quality[1]} Root: {root[1]}"
+        #     cv2.putText(frame, text, (20, 40),
+        #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         cv2.imshow("Hand demo (press q to quit)", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
