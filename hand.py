@@ -62,6 +62,9 @@ with open("quality.json", encoding="utf-8") as f:
 GESTURES_RIGHT_HAND = {}
 # with open("roots.json") as f:
 with open("roots.json", encoding="utf-8") as f:
+GESTURES = {}
+# with open("chords.json") as f:
+with open("chords.json", encoding="utf-8") as f:
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
 
