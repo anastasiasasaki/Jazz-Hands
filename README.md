@@ -16,6 +16,12 @@ pip install mido python-rtmidi
 python3 hand.py
 ```
 
+On Windows, `hand.py` opens an existing MIDI output named `Jazz Hands Port 1`.
+Create a port in a virtual MIDI cable program such as loopMIDI before running
+the app, then select that same port as the MIDI input in your DAW. If the
+output appears under a different name, pass its exact name to `MidiOut` in
+`hand.py`.
+
 
 ## TODO: 
 - Revisit what should be organized into MVP, Should, Future 
