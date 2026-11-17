@@ -39,7 +39,8 @@ if not os.path.exists(MODEL_PATH):
 # GESTURES :  (index, middle, ring, pinky) -> (name, midi notes)
 
 GESTURES = {}
-with open("chords.json") as f:
+# with open("chords.json") as f:
+with open("chords.json", encoding="utf-8") as f:
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
 
