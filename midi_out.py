@@ -46,7 +46,8 @@ class MidiOut:
             self.port = mido.open_output(name, virtual=True)
         
         else:  # Windows
-            ports = mido.get_output_names()
+            #  = mido.get_output_names()
+            ports = [p for p in mido.get_output_names() if "Microsoft GS Wavetable Synth" not in p]
             if not ports:
                 raise RuntimeError(
                     "No MIDI output ports found. On Windows, install and open loopMIDI first."

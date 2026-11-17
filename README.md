@@ -16,6 +16,14 @@ pip install mido python-rtmidi
 python3 hand.py
 ```
 
+Windows: 
+```
+python -m venv .venv
+.venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install opencv-python mediapipe mido python-rtmidi
+python hand.py
+```
 
 ## TODO: 
 - Revisit what should be organized into MVP, Should, Future 
