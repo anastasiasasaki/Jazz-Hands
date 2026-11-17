@@ -37,7 +37,8 @@ if not os.path.exists(MODEL_PATH):
 # GESTURES_LEFT_HAND :  (index, middle, ring, pinky) -> (name, midi notes)
 # this gets the chord quality
 GESTURES_LEFT_HAND = {}
-with open("quality.json") as f:
+# with open("quality.json") as f:
+with open("quality.json", encoding="utf-8") as f:
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
 
@@ -59,7 +60,8 @@ with open("quality.json") as f:
 
 # this gets the root of the chord
 GESTURES_RIGHT_HAND = {}
-with open("roots.json") as f:
+# with open("roots.json") as f:
+with open("roots.json", encoding="utf-8") as f:
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
 

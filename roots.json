@@ -3,5 +3,6 @@
   "one":   {"fingers": "1000", "root": "D"},
   "two":   {"fingers": "1100", "root": "E"},
   "three": {"fingers": "0111", "root": "F"},
-  "four":  {"fingers": "1111", "root": "G"}
+  "four":  {"fingers": "1111", "root": "G"},
+  "pinky": {"fingers": "0001", "root": "A"}
 }
