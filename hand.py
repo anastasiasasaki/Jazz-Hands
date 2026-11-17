@@ -37,25 +37,25 @@ if not os.path.exists(MODEL_PATH):
 # GESTURES_LEFT_HAND :  (index, middle, ring, pinky) -> (name, midi notes)
 # this gets the chord quality
 GESTURES_LEFT_HAND = {}
-with open("chords.json") as f:
+with open("quality.json") as f:
     for name, spec in json.load(f).items():
         fingers = spec["fingers"]
 
         # error out if the json file has the wrong format 
         if len(fingers) != 4 or set(fingers) - {"0", "1"}:
-            raise SystemExit(f'chords.json: "{name}" needs "fingers" to be '
+            raise SystemExit(f'quality.json: "{name}" needs "fingers" to be '
                              f'4 characters of 0/1, got {fingers!r}')
         
         pattern = tuple(c == "1" for c in fingers)  # "1100" -> (True, True, False, False)
 
         if pattern in GESTURES_LEFT_HAND:
-            raise SystemExit(f'chords.json: "{name}" uses the same fingers as '
+            raise SystemExit(f'quality.json: "{name}" uses the same fingers as '
                              f'"{GESTURES_LEFT_HAND[pattern][0]}"')
         
         GESTURES_LEFT_HAND[pattern] = (name, spec["quality"])
 
         if spec["quality"] not in CHORDS:
-            raise SystemExit(f'chords.json: "{name}" has unknown quality {spec["quality"]!r}')
+            raise SystemExit(f'quality.json: "{name}" has unknown quality {spec["quality"]!r}')
 
 # this gets the root of the chord
 GESTURES_RIGHT_HAND = {}
