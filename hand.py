@@ -8,6 +8,7 @@ import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
+from live_overlay import show_overlay
 
 
 MODEL_PATH = "hand_landmarker.task"
@@ -181,6 +182,8 @@ with MidiOut() as midi:
 
         quality = None # (name, "maj") from left hand
         root = None # (name, "C") from right hand
+        left_hand_gesture = None
+        right_hand_gesture = None
 
         for lm, handed in zip(result.hand_landmarks, result.handedness):
             label = handed[0].category_name  # "Left" or "Right"
@@ -189,10 +192,12 @@ with MidiOut() as midi:
                 label = "Right" if label == "Left" else "Left"
 
             if label == "Left" and quality is None:
-                quality = GESTURES_LEFT_HAND.get(finger_states(lm))
+                left_hand_gesture = finger_states(lm)
+                quality = GESTURES_LEFT_HAND.get(left_hand_gesture)
 
             if label == "Right":
-                root = GESTURES_RIGHT_HAND.get(finger_states(lm))
+                right_hand_gesture = finger_states(lm)
+                root = GESTURES_RIGHT_HAND.get(right_hand_gesture)
                 
 
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
@@ -225,8 +230,12 @@ with MidiOut() as midi:
         #     text = f"Chord: {quality[1]} Root: {root[1]}"
         #     cv2.putText(frame, text, (20, 40),
         #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-
-        cv2.imshow("Hand demo (press q to quit)", frame)
+        
+        if right_hand_gesture and left_hand_gesture and quality and root:
+            show_overlay(frame, left_hand_gesture, right_hand_gesture, root[1], quality[1])
+        else:
+            cv2.imshow("Jazz Hands (press q to quit)", frame)
+            
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
