@@ -31,6 +31,7 @@ python hand.py
 ## TODO: 
 - Finalize Windows compatibility
 - Deploy the application
+- Finalize report after polishing program
 
 ## Material: 
 You can use any DAW or software-based musical instrument.
