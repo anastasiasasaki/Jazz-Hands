@@ -1,27 +1,28 @@
 import cv2
 
-WINDOW_NAME = "Jazz Hands"
+WINDOW_NAME = "Jazz Hands (press q to quit)"
 
-def show_overlay(frame, gesture="Unknown", chord="None",
-                 volume=0, pitch=0):
+def show_overlay(frame, left_hand="Unknown", right_hand="Unknown", root="None", quality="None",
+                 volume=0):
 
     if frame is None:
         return True
 
     frame = frame.copy()
 
-    cv2.putText(frame, f"Gesture: {gesture}",
+    cv2.putText(frame, f"Left hand: {left_hand}",
                 (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
-    cv2.putText(frame, f"Chord: {chord}",
-                (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                0.8, (0, 255, 0), 2)
+    cv2.putText(frame, f"Right hand: {right_hand}",
+                    (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8, (0, 255, 0), 2)
 
-    cv2.putText(frame, f"Volume: {volume}%",
+    cv2.putText(frame, f"Chord: {root} {quality}",
                 (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
+<<<<<<< HEAD
     bar_width = round(200 * max(0, min(100, volume)) / 100)
     cv2.rectangle(frame, (20, 130), (220, 140), (60, 60, 60), -1)
     if bar_width > 0:
@@ -29,6 +30,9 @@ def show_overlay(frame, gesture="Unknown", chord="None",
     cv2.rectangle(frame, (20, 130), (220, 140), (200, 200, 200), 1)
 
     cv2.putText(frame, f"Pitch: {pitch:+d}",
+=======
+    cv2.putText(frame, f"Volume: {volume}%",
+>>>>>>> main
                 (20, 160), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 

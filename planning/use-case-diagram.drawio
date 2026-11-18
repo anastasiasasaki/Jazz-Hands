@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="Page-1" id="BrrIJ3QglEb5-I_XQSgR">
+    <mxGraphModel dx="1296" dy="840" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="x9VWjQaO5z_TQBuunttO-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;roundedPerimeter=1;verticalAlign=top;arcSize=2;fillColor=#fff2cc;strokeColor=#d6b656;" value="Jazz Hands System" vertex="1">
+          <mxGeometry height="390" width="310" x="170" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-3" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Select chord quality with left hand" vertex="1">
+          <mxGeometry height="60" width="220" x="215" y="90" as="geometry" />
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-4" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Select chord root with right hand" vertex="1">
+          <mxGeometry height="60" width="220" x="215" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-5" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Control volume with right hand" vertex="1">
+          <mxGeometry height="60" width="220" x="215" y="250" as="geometry" />
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-6" parent="1" style="ellipse;whiteSpace=wrap;html=1;shapeInside=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="View Live Overlay" vertex="1">
+          <mxGeometry height="60" width="220" x="215" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-7" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;labelPerimeter=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" value="Performer" vertex="1">
+          <mxGeometry height="125" width="30" x="40" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-10" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;defaultLabelBackgroundColor=page;labelPadding=0 4;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="x9VWjQaO5z_TQBuunttO-3" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="290" as="sourcePoint" />
+            <mxPoint x="320" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-11" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;defaultLabelBackgroundColor=page;labelPadding=0 4;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="x9VWjQaO5z_TQBuunttO-4" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="300" as="sourcePoint" />
+            <mxPoint x="320" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-12" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;defaultLabelBackgroundColor=page;labelPadding=0 4;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="x9VWjQaO5z_TQBuunttO-5" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="310" as="sourcePoint" />
+            <mxPoint x="320" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="x9VWjQaO5z_TQBuunttO-13" edge="1" parent="1" style="endArrow=classic;html=1;rounded=0;defaultLabelBackgroundColor=page;labelPadding=0 4;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="x9VWjQaO5z_TQBuunttO-6" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="80" y="320" as="sourcePoint" />
+            <mxPoint x="320" y="270" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
