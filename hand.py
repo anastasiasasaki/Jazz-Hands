@@ -110,6 +110,8 @@ options = vision.HandLandmarkerOptions(
 landmarker = vision.HandLandmarker.create_from_options(options)
 
 # quit if webcame fails 
+cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("Camera", 640, 360)
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
@@ -195,8 +197,15 @@ with MidiOut() as midi:
         # cv2.putText(frame, text, (20, 40),
         #             cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-        cv2.imshow("Hand demo (press q to quit)", frame)
+        cv2.imshow("Camera", frame)
         if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+        try:
+            visible = cv2.getWindowProperty("Camera", cv2.WND_PROP_VISIBLE)
+        except cv2.error:
+            # Some OpenCV builds raise when the window has already closed.
+            break
+        if visible < 1:
             break
 
 cap.release()
