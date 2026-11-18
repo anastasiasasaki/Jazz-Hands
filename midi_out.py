@@ -1,3 +1,5 @@
+import platform
+
 import mido
 
 
@@ -34,6 +36,7 @@ def chord(quality, root, octave = 3):
 
 
 class MidiOut:
+<<<<<<< HEAD
     def __init__(self, name = 'Jazz Hands Port 1'):
         try:
             self.port = mido.open_output(name, virtual=False)
@@ -46,7 +49,29 @@ class MidiOut:
                 "MIDI port (for example with loopMIDI) or change the name "
                 "to match an available output."
             ) from exc
+=======
+    """ def __init__(self, name = 'Jazz Hands Port'):
+        self.port = mido.open_output(name, virtual=True)
+        self.current_notes = [] """
+    def __init__(self, name='Jazz Hands Port'):
+>>>>>>> main
         self.current_notes = []
+
+        if platform.system() == "Darwin":  # macOS
+            self.port = mido.open_output(name, virtual=True)
+        
+        else:  # Windows
+            #  = mido.get_output_names()
+            ports = [p for p in mido.get_output_names() if "Microsoft GS Wavetable Synth" not in p]
+            if not ports:
+                raise RuntimeError(
+                    "No MIDI output ports found. On Windows, install and open loopMIDI first."
+                )
+            
+            # Prefer a port matching `name` if the user created one in loopMIDI, otherwise use the first port
+            matching_ports = [p for p in ports if name in p]
+            target_port = matching_ports[0] if matching_ports else ports[0]
+            self.port = mido.open_output(target_port)
 
     # plays a chord or single note
     # play None for silence

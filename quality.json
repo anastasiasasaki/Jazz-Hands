@@ -1,0 +1,7 @@
+{
+  "fist":  {"fingers": "0000", "quality": "maj"},
+  "one":   {"fingers": "1000", "quality": "min"},
+  "two":   {"fingers": "1100", "quality": "aug"},
+  "three": {"fingers": "0111", "quality": "dim"},
+  "four":  {"fingers": "1111", "quality": "7"}
+}
