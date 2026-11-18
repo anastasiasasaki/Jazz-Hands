@@ -28,6 +28,30 @@ pip install opencv-python mediapipe mido python-rtmidi
 python hand.py
 ```
 
+## Features:
+- Create music using right hand gestures to control chord roots
+- Adjust MIDI quality using left hand gestures
+- Output to DAW or online synthesizers
+
+## Controls:
+Perform these gestures in order to control the MIDI output.
+### Right Hand: Roots
+Fist: C\
+Index: D\
+Index, Middle: E\
+Index, Middle, Ring: F\
+Index, Middle, Ring, Pinky: G\
+Pinky: A
+
+### Left Hand: Qualities
+Fist: Major\
+Index: Minor\
+Index, Middle: Augmented\
+Index, Middle, Ring: Diminished\
+Index, Middle, Ring, Pinky: 7th Chord\
+Pinky: Major 7th Chord
+
+
 ## TODO: 
 - Finalize Windows compatibility
 - Deploy the application
