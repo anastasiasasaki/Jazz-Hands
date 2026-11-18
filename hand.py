@@ -4,6 +4,7 @@ import math
 import time 
 import urllib.request
 from midi_out import MidiOut, chord, CHORDS
+from live_overlay import WINDOW_NAME, show_overlay
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
@@ -131,8 +132,8 @@ options = vision.HandLandmarkerOptions(
 landmarker = vision.HandLandmarker.create_from_options(options)
 
 # quit if webcame fails 
-cv2.namedWindow("Camera", cv2.WINDOW_NORMAL)
-cv2.resizeWindow("Camera", 640, 360)
+cv2.namedWindow(WINDOW_NAME, cv2.WINDOW_NORMAL)
+cv2.resizeWindow(WINDOW_NAME, 640, 360)
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
@@ -228,15 +229,12 @@ with MidiOut() as midi:
         #     cv2.putText(frame, text, (20, 40),
         #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-        cv2.imshow("Camera", frame)
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
-        try:
-            visible = cv2.getWindowProperty("Camera", cv2.WND_PROP_VISIBLE)
-        except cv2.error:
-            # Some OpenCV builds raise when the window has already closed.
-            break
-        if visible < 1:
+        left_gesture = quality[0] if quality else "None"
+        right_gesture = root[0] if root else "None"
+        chord_name = f"{root[1]}{quality[1]}" if quality and root else "None"
+        if not show_overlay(frame,
+                            gesture=f"L: {left_gesture} / R: {right_gesture}",
+                            chord=chord_name):
             break
 
 cap.release()
