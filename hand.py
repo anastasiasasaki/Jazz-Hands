@@ -9,7 +9,6 @@ import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
-from live_overlay import show_overlay
 
 
 MODEL_PATH = "hand_landmarker.task"
@@ -233,23 +232,13 @@ with MidiOut() as midi:
         #     text = f"Chord: {quality[1]} Root: {root[1]}"
         #     cv2.putText(frame, text, (20, 40),
         #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-<<<<<<< HEAD
-
         left_gesture = quality[0] if quality else "None"
         right_gesture = root[0] if root else "None"
-        chord_name = f"{root[1]}{quality[1]}" if quality and root else "None"
         if not show_overlay(frame,
-                            gesture=f"L: {left_gesture} / R: {right_gesture}",
-                            chord=chord_name):
-=======
-        
-        if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, left_hand_gesture, right_hand_gesture, root[1], quality[1])
-        else:
-            cv2.imshow("Jazz Hands (press q to quit)", frame)
-            
-        if cv2.waitKey(1) & 0xFF == ord("q"):
->>>>>>> main
+                            left_hand=left_gesture,
+                            right_hand=right_gesture,
+                            root=root[1] if root else "None",
+                            quality=quality[1] if quality else "None"):
             break
 
 cap.release()

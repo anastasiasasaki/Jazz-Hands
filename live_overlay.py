@@ -22,17 +22,13 @@ def show_overlay(frame, left_hand="Unknown", right_hand="Unknown", root="None", 
                 (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
-<<<<<<< HEAD
     bar_width = round(200 * max(0, min(100, volume)) / 100)
     cv2.rectangle(frame, (20, 130), (220, 140), (60, 60, 60), -1)
     if bar_width > 0:
         cv2.rectangle(frame, (20, 130), (20 + bar_width, 140), (0, 255, 0), -1)
     cv2.rectangle(frame, (20, 130), (220, 140), (200, 200, 200), 1)
 
-    cv2.putText(frame, f"Pitch: {pitch:+d}",
-=======
     cv2.putText(frame, f"Volume: {volume}%",
->>>>>>> main
                 (20, 160), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
@@ -69,10 +65,11 @@ if __name__ == "__main__":
         while True:
             if not show_overlay(
                 frame,
-                gesture="Open Palm",
-                chord="C Major",
-                volume=75,
-                pitch=2
+                left_hand="Open Palm",
+                right_hand="Open Palm",
+                root="C",
+                quality="Major",
+                volume=75
             ):
                 break
     finally:
