@@ -36,25 +36,7 @@ def chord(quality, root, octave = 3):
 
 
 class MidiOut:
-<<<<<<< HEAD
-    def __init__(self, name = 'Jazz Hands Port 1'):
-        try:
-            self.port = mido.open_output(name, virtual=False)
-        except OSError as exc:
-            available = mido.get_output_names()
-            ports = ', '.join(repr(port) for port in available) or 'none'
-            raise OSError(
-                f"Could not open MIDI output {name!r}. "
-                f"Available outputs: {ports}. On Windows, create a virtual "
-                "MIDI port (for example with loopMIDI) or change the name "
-                "to match an available output."
-            ) from exc
-=======
-    """ def __init__(self, name = 'Jazz Hands Port'):
-        self.port = mido.open_output(name, virtual=True)
-        self.current_notes = [] """
     def __init__(self, name='Jazz Hands Port'):
->>>>>>> main
         self.current_notes = []
 
         if platform.system() == "Darwin":  # macOS
