@@ -7,6 +7,7 @@ GitHub site: https://github.com/anastasiasasaki/Jazz-Hands
 ```git clone git@github.com:anastasiasasaki/Jazz-Hands.git``` 
 
 ## Environment setup: 
+### MacOS:
 ```
 python3 -m venv .venv
 source .venv/bin/activate
@@ -16,7 +17,9 @@ pip install mido python-rtmidi
 python3 hand.py
 ```
 
-Windows: 
+### Windows:
+
+In the `midi_out.py` file, change line 46 to: virtual=False
 ```
 python -m venv .venv
 .venv\Scripts\activate
@@ -26,8 +29,9 @@ python hand.py
 ```
 
 ## TODO: 
-- Revisit what should be organized into MVP, Should, Future 
-- Make all the tasks into issues 
+- Finalize Windows compatibility
+- Deploy the application
+- Finalize report after polishing program
 
 ## Material: 
 You can use any DAW or software-based musical instrument.
