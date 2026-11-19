@@ -18,8 +18,6 @@ python3 hand.py
 ```
 
 ### Windows:
-
-In the `midi_out.py` file, change line 46 to: virtual=False
 ```
 python -m venv .venv
 .venv\Scripts\activate
