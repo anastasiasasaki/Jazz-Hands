@@ -6,5 +6,9 @@
   "four":  {"fingers": "1111", "root": "E"},
   "pinky": {"fingers": "0001", "root": "F"},
   "pinky, ring": {"fingers": "0011", "root": "F#"},
-  "pinky, ring, middle": {"fingers": "0111", "root": "G"}
+  "pinky, ring, middle": {"fingers": "0111", "root": "G"},
+  "rockstar": {"fingers": "1001", "root": "G#"},
+  "index, middle, pinkie": {"fingers": "1101", "root": "A"},
+  "index, ring, pinkie": {"fingers": "1011", "root": "A#"},
+  "middle": {"fingers": "0100", "root": "B"}
 }
