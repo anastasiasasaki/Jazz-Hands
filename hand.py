@@ -223,14 +223,6 @@ with MidiOut() as midi:
         else:
             midi.play(None)
 
-        # testing delete 
-
-        # text = f"Left hand: {current[0]}" if current else "Left hand: none"
-        # if quality and root:
-        #     text = f"Chord: {quality[1]} Root: {root[1]}"
-        #     cv2.putText(frame, text, (20, 40),
-        #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-        
         if right_hand_gesture and left_hand_gesture and quality and root:
             show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
