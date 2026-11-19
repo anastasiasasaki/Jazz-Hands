@@ -2,7 +2,13 @@ import cv2
 
 WINDOW_NAME = "Jazz Hands (press q to quit)"
 
-def show_overlay(frame, left_hand="Unknown", right_hand="Unknown", root="None", quality="None",
+def show_overlay(frame, 
+                 left_hand_name="Unknown", 
+                 left_hand="Unknown", 
+                 right_hand_name="Unknown",
+                 right_hand="Unknown", 
+                 root="None", 
+                 quality="None",
                  volume=0):
 
     if frame is None:
@@ -10,11 +16,11 @@ def show_overlay(frame, left_hand="Unknown", right_hand="Unknown", root="None", 
 
     frame = frame.copy()
 
-    cv2.putText(frame, f"Left hand: {left_hand}",
+    cv2.putText(frame, f"Left hand: {left_hand_name} {left_hand}",
                 (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
-    cv2.putText(frame, f"Right hand: {right_hand}",
+    cv2.putText(frame, f"Right hand: {right_hand_name} {right_hand}",
                     (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
                     0.8, (0, 255, 0), 2)
 

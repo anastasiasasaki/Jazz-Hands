@@ -232,7 +232,7 @@ with MidiOut() as midi:
         #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
         if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, left_hand_gesture, right_hand_gesture, root[1], quality[1])
+            show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
             cv2.imshow("Jazz Hands (press q to quit)", frame)
             
@@ -242,50 +242,6 @@ with MidiOut() as midi:
 cap.release()
 cv2.destroyAllWindows()
 
-
-
-
-
-
-
-# delete later 
-""" # Which landmark points to connect with lines (the hand skeleton).
-CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),          # thumb
-    (0, 5), (5, 6), (6, 7), (7, 8),          # index
-    (5, 9), (9, 10), (10, 11), (11, 12),     # middle
-    (9, 13), (13, 14), (14, 15), (15, 16),   # ring
-    (13, 17), (17, 18), (18, 19), (19, 20),  # pinky
-    (0, 17),                                 # palm edge
-]
-
-
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    raise SystemExit("Could not open the webcam.")
-
-start = time.time()
-last_ts = -1
-# open virtual midi port
-with MidiOut() as midi:
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        # Mirror the image like a selfie view. If Left/Right look swapped on
-        # your screen, comment out this line.
-        frame = cv2.flip(frame, 1)
-
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-        ts = max(int((time.time() - start) * 1000), last_ts + 1)  # must increase
-        last_ts = ts
-        result = landmarker.detect_for_video(mp_image, ts)
-
-
-    cv2.imshow("Hand demo (press q to quit)", frame)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break """
 
 
 
