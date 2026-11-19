@@ -109,6 +109,21 @@ def finger_states(lm):
                  for pip, tip in FINGERS)
 
 
+# check angle of palm
+def palm_spread_angle(lm, w, h):
+    # convert to pixels
+    wx, wy = lm[0].x * w, lm[0].y * h
+    ix, iy = lm[5].x * w, lm[5].y * h
+    px, py = lm[17].x * w, lm[17].y * h
+
+    v1 = (ix - wx, iy - wy) # line from wrist to base of index finger
+    v2 = (px - wx, py - wy) # line from wrist to base of pinkie finger
+
+    dot = v1[0] * v2[0] + v1[1] * v2[1]
+    cross = v1[0] * v2[1] - v1[1] * v2[0]
+
+    return math.degrees(math.atan2(cross, dot))
+
 # which landmark pairs to connect with lines (skeleton) 
 
 CONNECTIONS = [
@@ -215,6 +230,13 @@ with MidiOut() as midi:
             cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
+            # # testing delete 
+            
+            text = f"hand angle: {palm_spread_angle(lm, w, h)}"
+            cv2.putText(frame, text, (500, 40),
+            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        
+
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
 
@@ -223,6 +245,7 @@ with MidiOut() as midi:
         else:
             midi.play(None)
 
+        
         if right_hand_gesture and left_hand_gesture and quality and root:
             show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
