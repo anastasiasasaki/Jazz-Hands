@@ -77,7 +77,7 @@ with open("roots.json", encoding="utf-8") as f:
             raise SystemExit(f'roots.json: "{name}" uses the same fingers as '
                              f'"{GESTURES_RIGHT_HAND[pattern][0]}"')
         
-        GESTURES_RIGHT_HAND[pattern] = (name, spec["root"])
+        GESTURES_RIGHT_HAND[pattern] = (name, spec["root"], spec["angle"])
 
 # Finger detection
 
@@ -203,6 +203,9 @@ with MidiOut() as midi:
         for lm, handed in zip(result.hand_landmarks, result.handedness):
             label = handed[0].category_name  # "Left" or "Right"
 
+            angle = palm_spread_angle(lm, w, h)
+
+
             if SWAP_HAND:
                 label = "Right" if label == "Left" else "Left"
 
@@ -211,8 +214,9 @@ with MidiOut() as midi:
                 quality = GESTURES_LEFT_HAND.get(left_hand_gesture)
 
             if label == "Right":
-                right_hand_gesture = finger_states(lm)
-                root = GESTURES_RIGHT_HAND.get(right_hand_gesture)
+                # check right palm angle
+                    right_hand_gesture = finger_states(lm), 1
+                    root = GESTURES_RIGHT_HAND.get(right_hand_gesture)
                 
 
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
@@ -231,10 +235,10 @@ with MidiOut() as midi:
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
             # # testing delete 
-            
-            text = f"hand angle: {palm_spread_angle(lm, w, h)}"
-            cv2.putText(frame, text, (500, 40),
-            cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            # # angle 40-60
+            # text = f"hand angle: {palm_spread_angle(lm, w, h)}"
+            # cv2.putText(frame, text, (500, 40),
+            # cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
