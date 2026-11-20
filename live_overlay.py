@@ -3,10 +3,10 @@ import cv2
 WINDOW_NAME = "Jazz Hands (press q to quit)"
 
 def show_overlay(frame, 
-                 left_hand_name="Unknown", 
-                 left_hand="Unknown", 
-                 right_hand_name="Unknown",
-                 right_hand="Unknown", 
+                 left_hand_name="None", 
+                 left_hand="None", 
+                 right_hand_name="None",
+                 right_hand="None", 
                  root="None", 
                  quality="None",
                  volume=0):

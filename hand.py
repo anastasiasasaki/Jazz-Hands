@@ -75,7 +75,7 @@ with open("roots.json", encoding="utf-8") as f:
 
         if (pattern, spec["angle"]) in GESTURES_RIGHT_HAND:
             raise SystemExit(f'roots.json: "{name}" uses the same pattern as '
-                             f'"{GESTURES_RIGHT_HAND[pattern][0]}"')
+                             f'"{GESTURES_RIGHT_HAND[(pattern, spec["angle"])][0]}"')
         
         GESTURES_RIGHT_HAND[(pattern, spec["angle"])] = (name, spec["root"], spec["angle"])
 
@@ -171,6 +171,7 @@ last_ts = -1
 # midi.play(chord('maj7', 48)) # plays C7 major
 # NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound. (as long as your hand is visible)
 
+right_palm_angle = "1"
 
 with MidiOut() as midi:
     while True:
@@ -216,15 +217,18 @@ with MidiOut() as midi:
             if label == "Right":
                 # check right palm angle
                 angle = palm_spread_angle(lm, w, h) # compute palm angle
-                flat = "1" if abs(angle) >= 40 else "0"
+                if angle >= 3:
+                    right_palm_angle = "1" 
+                elif angle <= -3:
+                    right_palm_angle = "0"
+                    
                 right_hand_gesture = finger_states(lm)
-                root = GESTURES_RIGHT_HAND.get((right_hand_gesture, flat))
+                root = GESTURES_RIGHT_HAND.get((right_hand_gesture, right_palm_angle))
                 
 
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
             # multiply by width/height to get pixels 
             # picture was flipped, so point at fraction x in the raw frame is at 1 - x, so (1 - p.x) 
-
             pts = [(int((1 - p.x) * w), int(p.y * h)) for p in lm]
 
             for a, b in CONNECTIONS:
@@ -236,27 +240,28 @@ with MidiOut() as midi:
             cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
-            # # testing delete 
-            # # angle 40-60
-            # text = f"hand angle: {palm_spread_angle(lm, w, h)}"
-            # cv2.putText(frame, text, (500, 40),
-            # cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            # debug view for right hand angle 
+            if label == "Right":
+                text = f"hand angle: {palm_spread_angle(lm, w, h)}"
+                cv2.putText(frame, text, (500, 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
-
         if quality and root:
             midi.play(chord(quality[1], root[1]))
         else:
             midi.play(None)
 
-        
+
+        # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
             show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
             cv2.imshow("Jazz Hands (press q to quit)", frame)
-            
+
+        # check for "q" input, if user presses "q" break out of the loop
         if cv2.waitKey(1) & 0xFF == ord("q"):
             break
 
