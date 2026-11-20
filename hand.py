@@ -229,6 +229,7 @@ with MidiOut() as midi:
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
             # multiply by width/height to get pixels 
             # picture was flipped, so point at fraction x in the raw frame is at 1 - x, so (1 - p.x) 
+            # this section draws the hand skeleton over the image
             pts = [(int((1 - p.x) * w), int(p.y * h)) for p in lm]
 
             for a, b in CONNECTIONS:
