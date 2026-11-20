@@ -203,7 +203,7 @@ with MidiOut() as midi:
         for lm, handed in zip(result.hand_landmarks, result.handedness):
             label = handed[0].category_name  # "Left" or "Right"
 
-            angle = palm_spread_angle(lm, w, h)
+            
 
 
             if SWAP_HAND:
@@ -215,8 +215,10 @@ with MidiOut() as midi:
 
             if label == "Right":
                 # check right palm angle
-                    right_hand_gesture = finger_states(lm), 1
-                    root = GESTURES_RIGHT_HAND.get(right_hand_gesture)
+                angle = palm_spread_angle(lm, w, h) # compute palm angle
+                angled = "1" if angle < 40 else "0"
+                right_hand_gesture = finger_states(lm), 1
+                root = GESTURES_RIGHT_HAND.get(right_hand_gesture, angled)
                 
 
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
