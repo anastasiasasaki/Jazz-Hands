@@ -1,9 +1,10 @@
 import cv2
-from utilities import align_text_right
+from utilities import align_text_right, align_text_center
 
-WINDOW_NAME = "Jazz Hands (press q to quit)"
+WINDOW_NAME = "Jazz Hands (press q to quit, d for debug)"
 
 def show_overlay(frame, 
+                 debug,
                 left_hand_name="-", 
                 left_hand="-", 
                 right_hand_name="-",
@@ -12,6 +13,8 @@ def show_overlay(frame,
                 quality="-",
                 volume=0):
 
+    # reads the frame's size in pixels
+    # frame is a numpy array or something
     h, w = frame.shape[:2]
 
     if frame is None:
@@ -19,19 +22,34 @@ def show_overlay(frame,
 
     frame = frame.copy()
 
-    cv2.putText(frame, f"Left hand: {left_hand_name} {left_hand}",
-                (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
-                0.8, (0, 255, 0), 2)
-
-    align_text_right(frame, 
-                    f"Right hand: {right_hand_name} {right_hand}",
-                    w - 20,
-                    40,
+    if debug:
+        cv2.putText(frame,
+                    f"Left hand: {left_hand_name} {left_hand}",
+                    (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
                     0.8, (0, 255, 0), 2)
+        align_text_right(frame, 
+                        f"Right hand: {right_hand_name} {right_hand}",
+                        w - 20,
+                        40,
+                        0.8, (0, 255, 0), 2)
+    else:
+        cv2.putText(frame,
+                    f"Left hand: {left_hand_name}",
+                    (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
+                    0.8, (0, 255, 0), 2)
+        align_text_right(frame, 
+                        f"Right hand: {right_hand_name}",
+                        w - 20,
+                        40,
+                        0.8, (0, 255, 0), 2)
 
-    cv2.putText(frame, f"Chord: {root} {quality}",
-                (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
-                0.8, (0, 255, 0), 2)
+    
+
+    align_text_center(frame,
+                    f"Chord: {root} {quality}",
+                    w // 2,
+                    40,
+                    1.3, (0, 255, 0), 2)
 
     cv2.putText(frame, f"Volume: {volume}%",
                 (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
@@ -39,10 +57,6 @@ def show_overlay(frame,
 
     cv2.imshow(WINDOW_NAME, frame)
 
-    key = cv2.waitKey(1) & 0xFF
-
-    if key == ord('q'):
-        return False
 
     try:
         if cv2.getWindowProperty(

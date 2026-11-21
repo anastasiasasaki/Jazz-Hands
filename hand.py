@@ -29,7 +29,14 @@ if not os.path.exists(MODEL_PATH):
     print("Downloading model...")
     urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
 
-# Load chords.json
+
+settings = {
+    "debug": False,
+    "quantize": False
+}
+
+
+
 
 # Each entry looks like: "two": {"fingers": "1100", "root": "E", "quality": "maj"}
 
@@ -175,6 +182,14 @@ right_palm_angle = "1"
 
 with MidiOut() as midi:
     while True:
+        # check for keypresses
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"): break
+        if key == ord("d"): settings["debug"] = not settings["debug"]
+
+
+
+        
         ok, frame = cap.read()
         if not ok:
             break
@@ -241,11 +256,11 @@ with MidiOut() as midi:
             cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
-            # debug view for right hand angle 
-            if label == "Right":
-                text = f"hand angle: {palm_spread_angle(lm, w, h)}"
-                cv2.putText(frame, text, (500, 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            # # debug view for right hand angle 
+            # if label == "Right":
+            #     text = f"hand angle: {palm_spread_angle(lm, w, h)}"
+            #     cv2.putText(frame, text, (500, 40),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
@@ -256,16 +271,12 @@ with MidiOut() as midi:
             midi.play(None)
 
 
-        exit_key = True # bad wording here but true means not exiting
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
-            exit_key = show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
+            show_overlay(frame, settings["debug"], quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
-            exit_key = show_overlay(frame)
+            show_overlay(frame, settings["debug"])
 
-        # check for "q" input, if user presses "q" break out of the loop
-        # this comes from show_overlay return value now
-        if not exit_key: break
 
 cap.release()
 cv2.destroyAllWindows()
