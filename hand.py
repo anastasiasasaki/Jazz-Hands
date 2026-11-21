@@ -181,6 +181,7 @@ last_ts = -1
 right_palm_angle = "1"
 
 last_second = 0
+last_time = time.time()
 
 with MidiOut() as midi:
     while True:
@@ -210,6 +211,12 @@ with MidiOut() as midi:
 
         frame = cv2.flip(frame, 1)
         h, w = frame.shape[:2]
+        
+        # fps counter
+        now = time.time()
+        fps = 1 / (now - last_time)
+        last_time = now
+        
 
         # each frame starts without a chord 
         # gets a chord when the left hand is found && the finger pattern exists in chords.json 
@@ -264,7 +271,10 @@ with MidiOut() as midi:
                 text = f"right hand angle: {palm_spread_angle(lm, w, h)}"
                 cv2.putText(frame, text, (20, 160),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-        
+
+        # debug view for fps
+        if settings["debug"]:
+            cv2.putText(frame, f"{fps:.0f} fps", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
