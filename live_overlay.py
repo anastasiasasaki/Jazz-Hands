@@ -33,6 +33,7 @@ def show_overlay(frame,
                         w - 20,
                         40,
                         0.8, (0, 255, 0), 2)
+        
     else:
         cv2.putText(frame,
                     f"Left hand: {left_hand_name}",

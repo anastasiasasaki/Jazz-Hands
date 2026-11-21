@@ -259,11 +259,11 @@ with MidiOut() as midi:
             cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
-            # # debug view for right hand angle 
-            # if label == "Right":
-            #     text = f"hand angle: {palm_spread_angle(lm, w, h)}"
-            #     cv2.putText(frame, text, (500, 40),
-            #     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            # debug view for right hand angle 
+            if label == "Right" and settings["debug"]:
+                text = f"right hand angle: {palm_spread_angle(lm, w, h)}"
+                cv2.putText(frame, text, (20, 160),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
@@ -275,10 +275,16 @@ with MidiOut() as midi:
             else:        
                 midi.play(chord(quality[1], root[1]))
         else:
-            midi.play(None)
-
-        if not last_second == int(time.time()):
-            last_second = int(time.time())
+            if settings["quantize"]:
+                if not last_second == int(time.time()):
+                    midi.play(None)
+            else:        
+                midi.play(None)
+    
+        if settings["quantize"]:
+            if not last_second == int(time.time()):
+                last_second = int(time.time())
+                cv2.circle(frame, (1075,69), 16, (255,255,255), -1)
         
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
