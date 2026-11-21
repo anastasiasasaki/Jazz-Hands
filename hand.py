@@ -256,15 +256,16 @@ with MidiOut() as midi:
             midi.play(None)
 
 
+        exit_key = True # bad wording here but true means not exiting
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
+            exit_key = show_overlay(frame, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
-            cv2.imshow("Jazz Hands (press q to quit)", frame)
+            exit_key = show_overlay(frame)
 
         # check for "q" input, if user presses "q" break out of the loop
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+        # this comes from show_overlay return value now
+        if not exit_key: break
 
 cap.release()
 cv2.destroyAllWindows()

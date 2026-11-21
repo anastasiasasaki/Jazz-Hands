@@ -1,15 +1,18 @@
 import cv2
+from utilities import align_text_right
 
 WINDOW_NAME = "Jazz Hands (press q to quit)"
 
 def show_overlay(frame, 
-                 left_hand_name="None", 
-                 left_hand="None", 
-                 right_hand_name="None",
-                 right_hand="None", 
-                 root="None", 
-                 quality="None",
-                 volume=0):
+                left_hand_name="-", 
+                left_hand="-", 
+                right_hand_name="-",
+                right_hand="-", 
+                root="-", 
+                quality="-",
+                volume=0):
+
+    h, w = frame.shape[:2]
 
     if frame is None:
         return True
@@ -20,16 +23,18 @@ def show_overlay(frame,
                 (20, 40), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
-    cv2.putText(frame, f"Right hand: {right_hand_name} {right_hand}",
-                    (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
+    align_text_right(frame, 
+                    f"Right hand: {right_hand_name} {right_hand}",
+                    w - 20,
+                    40,
                     0.8, (0, 255, 0), 2)
 
     cv2.putText(frame, f"Chord: {root} {quality}",
-                (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
+                (20, 80), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
     cv2.putText(frame, f"Volume: {volume}%",
-                (20, 160), cv2.FONT_HERSHEY_SIMPLEX,
+                (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
 
     cv2.imshow(WINDOW_NAME, frame)
