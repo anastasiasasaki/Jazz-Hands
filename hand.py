@@ -32,7 +32,7 @@ if not os.path.exists(MODEL_PATH):
 
 settings = {
     "debug": False,
-    "quantize": False
+    "quantize": True
 }
 
 
@@ -180,12 +180,15 @@ last_ts = -1
 
 right_palm_angle = "1"
 
+last_second = 0
+
 with MidiOut() as midi:
     while True:
         # check for keypresses
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"): break
         if key == ord("d"): settings["debug"] = not settings["debug"]
+        if key == ord("w"): settings["quantize"] = not settings["quantize"]
 
 
 
@@ -266,16 +269,22 @@ with MidiOut() as midi:
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
         if quality and root:
-            midi.play(chord(quality[1], root[1]))
+            if settings["quantize"]:
+                if not last_second == int(time.time()):
+                    midi.play(chord(quality[1], root[1]))
+            else:        
+                midi.play(chord(quality[1], root[1]))
         else:
             midi.play(None)
 
-
+        if not last_second == int(time.time()):
+            last_second = int(time.time())
+        
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, settings["debug"], quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
+            show_overlay(frame, settings["debug"], settings["quantize"], quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
-            show_overlay(frame, settings["debug"])
+            show_overlay(frame, settings["debug"], settings["quantize"])
 
 
 cap.release()

@@ -1,10 +1,11 @@
 import cv2
 from utilities import align_text_right, align_text_center
 
-WINDOW_NAME = "Jazz Hands (press q to quit, d for debug)"
+WINDOW_NAME = "Jazz Hands (press q to quit, d for debug, w for quantize)"
 
 def show_overlay(frame, 
-                 debug,
+                debug,
+                quantize,
                 left_hand_name="-", 
                 left_hand="-", 
                 right_hand_name="-",
@@ -50,6 +51,13 @@ def show_overlay(frame,
                     w // 2,
                     40,
                     1.3, (0, 255, 0), 2)
+
+    if quantize:
+        align_text_center(frame,
+                            f"Quantize",
+                            w // 2,
+                            80,
+                            1.3, (0, 255, 0), 2)
 
     cv2.putText(frame, f"Volume: {volume}%",
                 (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
