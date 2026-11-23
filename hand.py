@@ -9,6 +9,7 @@ import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
 from live_overlay import show_overlay
+from utilities import align_text_center
 
 
 MODEL_PATH = "hand_landmarker.task"
@@ -294,7 +295,12 @@ with MidiOut() as midi:
         if settings["quantize"]:
             if not last_second == int(time.time()):
                 last_second = int(time.time())
-                cv2.circle(frame, (1075,69), 16, (255,255,255), -1)
+                # cv2.circle(frame, (1075,69), 16, (255,255,255), -1)
+                align_text_center(frame, 
+                    ".", 
+                    w // 2, 
+                    90,
+                    20)
         
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
