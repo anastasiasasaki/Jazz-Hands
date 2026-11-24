@@ -9,6 +9,11 @@ import mediapipe as mp
 from mediapipe.tasks import python as mp_python
 from mediapipe.tasks.python import vision
 from live_overlay import show_overlay
+from utilities import align_text_center
+
+
+
+print([line for line in cv2.getBuildInformation().splitlines() if "GUI:" in line])
 
 
 MODEL_PATH = "hand_landmarker.task"
@@ -29,7 +34,14 @@ if not os.path.exists(MODEL_PATH):
     print("Downloading model...")
     urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
 
-# Load chords.json
+
+settings = {
+    "debug": False,
+    "quantize": True
+}
+
+
+
 
 # Each entry looks like: "two": {"fingers": "1100", "root": "E", "quality": "maj"}
 
@@ -73,11 +85,11 @@ with open("roots.json", encoding="utf-8") as f:
         
         pattern = tuple(c == "1" for c in fingers)  # "1100" -> (True, True, False, False)
 
-        if pattern in GESTURES_RIGHT_HAND:
-            raise SystemExit(f'roots.json: "{name}" uses the same fingers as '
-                             f'"{GESTURES_RIGHT_HAND[pattern][0]}"')
+        if (pattern, spec["angle"]) in GESTURES_RIGHT_HAND:
+            raise SystemExit(f'roots.json: "{name}" uses the same pattern as '
+                             f'"{GESTURES_RIGHT_HAND[(pattern, spec["angle"])][0]}"')
         
-        GESTURES_RIGHT_HAND[pattern] = (name, spec["root"])
+        GESTURES_RIGHT_HAND[(pattern, spec["angle"])] = (name, spec["root"], spec["angle"])
 
 # Finger detection
 
@@ -109,6 +121,21 @@ def finger_states(lm):
                  for pip, tip in FINGERS)
 
 
+# check angle of palm
+def palm_spread_angle(lm, w, h):
+    # convert to pixels
+    wx, wy = lm[0].x * w, lm[0].y * h
+    ix, iy = lm[5].x * w, lm[5].y * h
+    px, py = lm[17].x * w, lm[17].y * h
+
+    v1 = (ix - wx, iy - wy) # line from wrist to base of index finger
+    v2 = (px - wx, py - wy) # line from wrist to base of pinkie finger
+
+    dot = v1[0] * v2[0] + v1[1] * v2[1]
+    cross = v1[0] * v2[1] - v1[1] * v2[0]
+
+    return math.degrees(math.atan2(cross, dot))
+
 # which landmark pairs to connect with lines (skeleton) 
 
 CONNECTIONS = [
@@ -120,14 +147,28 @@ CONNECTIONS = [
     (0, 17),                                 # palm edge
 ]
 
-# set up MediaPipe. VIDEO mode = hand it one frame at a time and wait
-# needs each frame to come with a timestamp 
+# # set up MediaPipe. VIDEO mode = hand it one frame at a time and wait
+# # needs each frame to come with a timestamp 
+# options = vision.HandLandmarkerOptions(
+#     base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
+#     running_mode=vision.RunningMode.VIDEO,
+#     num_hands=2,
+# )
+
+# set upp MediaPipe to run independently
+latest_result = None
+
+def on_result (result, output_image, timestamp_ms):
+    global latest_result
+    latest_result = result
 
 options = vision.HandLandmarkerOptions(
-    base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
-    running_mode=vision.RunningMode.VIDEO,
-    num_hands=2,
+    base_options = mp_python.BaseOptions(model_asset_path = MODEL_PATH),
+    running_mode = vision.RunningMode.LIVE_STREAM,
+    num_hands = 2,
+    result_callback = on_result,
 )
+
 
 landmarker = vision.HandLandmarker.create_from_options(options)
 
@@ -136,12 +177,22 @@ cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
 
+# 720p resoukltion :D
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+# # 640 resolution :(
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+
 # VIDEO mode needs a timestamp in milliseconds for every frame, each new > last 
 # milliseconds since the program started 
 # last_ts force it to go up if two frames land in the same millisecond 
 
-start = time.time()
 last_ts = -1
+
+start = time.time()
+tick = 0
 
 # makes sure if a program crashes it closes the port instead of playing the note that it's stuck on 
 # "with MidiOut() as midi" opens the virtual MIDI port, and when the block ends (even if the program crashes) it automatically silences and closes the port, so you never get a stuck note 
@@ -156,9 +207,24 @@ last_ts = -1
 # midi.play(chord('maj7', 48)) # plays C7 major
 # NOTE ON THESE: They don't play right away. The program needs to run a second or two before your DAW will connect to the midi port. The play() function won't replay a note that's already playing, so because of that putting the commands like this won't make a sound. I made a little demo below to actually play sound. (as long as your hand is visible)
 
+right_palm_angle = "1"
+
+last_second = 0
+last_time = time.time()
 
 with MidiOut() as midi:
     while True:
+        tick += 1
+        # print(tick)
+        # check for keypresses
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord("q"): break
+        if key == ord("d"): settings["debug"] = not settings["debug"]
+        if key == ord("w"): settings["quantize"] = not settings["quantize"]
+
+
+
+        # reads the video frame from the webcam
         ok, frame = cap.read()
         if not ok:
             break
@@ -170,12 +236,27 @@ with MidiOut() as midi:
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         ts = max(int((time.time() - start) * 1000), last_ts + 1)
         last_ts = ts
-        result = landmarker.detect_for_video(mp_image, ts)
+        
+        before_landmarker = time.time()
+        # # old landmarker detect that waits
+        # result = landmarker.detect_for_video(mp_image, ts)
+        # new landmarker detect that runs asynchronously
+        landmarker.detect_async(mp_image, ts)
+        result = latest_result
+        after_landmarker = time.time()
+        landmarker_time = after_landmarker - before_landmarker
 
         # mirror the image so left hand is left and right is right 
 
         frame = cv2.flip(frame, 1)
         h, w = frame.shape[:2]
+        
+        # fps counter
+        if settings["debug"]:
+            now = time.time()
+            fps = 1 / (now - last_time)
+            last_time = now
+        
 
         # each frame starts without a chord 
         # gets a chord when the left hand is found && the finger pattern exists in chords.json 
@@ -185,8 +266,12 @@ with MidiOut() as midi:
         left_hand_gesture = None
         right_hand_gesture = None
 
-        for lm, handed in zip(result.hand_landmarks, result.handedness):
+        hands = zip(result.hand_landmarks, result.handedness) if result else []
+        for lm, handed in hands:
             label = handed[0].category_name  # "Left" or "Right"
+
+            
+
 
             if SWAP_HAND:
                 label = "Right" if label == "Left" else "Left"
@@ -196,14 +281,21 @@ with MidiOut() as midi:
                 quality = GESTURES_LEFT_HAND.get(left_hand_gesture)
 
             if label == "Right":
+                # check right palm angle
+                angle = palm_spread_angle(lm, w, h) # compute palm angle
+                if angle >= 3:
+                    right_palm_angle = "1" 
+                elif angle <= -3:
+                    right_palm_angle = "0"
+                    
                 right_hand_gesture = finger_states(lm)
-                root = GESTURES_RIGHT_HAND.get(right_hand_gesture)
+                root = GESTURES_RIGHT_HAND.get((right_hand_gesture, right_palm_angle))
                 
 
             # landmark x and y are fractions from 0 to 1 (x = how far vertically across the picture, y = how far down horizontally) 
             # multiply by width/height to get pixels 
             # picture was flipped, so point at fraction x in the raw frame is at 1 - x, so (1 - p.x) 
-
+            # this section draws the hand skeleton over the image
             pts = [(int((1 - p.x) * w), int(p.y * h)) for p in lm]
 
             for a, b in CONNECTIONS:
@@ -215,77 +307,53 @@ with MidiOut() as midi:
             cv2.putText(frame, label, (pts[0][0], pts[0][1] + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
 
+            # debug view for right hand angle 
+            if label == "Right" and settings["debug"]:
+                text = f"right hand angle: {angle:.01f}"
+                cv2.putText(frame, text, (20, 160),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
+        # debug view for fps, hand landmarker time, camera resolution
+        if settings["debug"]:
+            cv2.putText(frame, f"{fps:.0f} fps", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, f"{landmarker_time:.03f} landmarker time", (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, f"{int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))} webcam video", (20, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
-
         if quality and root:
-            midi.play(chord(quality[1], root[1]))
+            if settings["quantize"]:
+                if not last_second == int(time.time()):
+                    midi.play(chord(quality[1], root[1]))
+            else:        
+                midi.play(chord(quality[1], root[1]))
         else:
-            midi.play(None)
-
-        # testing delete 
-
-        # text = f"Left hand: {current[0]}" if current else "Left hand: none"
-        # if quality and root:
-        #     text = f"Chord: {quality[1]} Root: {root[1]}"
-        #     cv2.putText(frame, text, (20, 40),
-        #                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            if settings["quantize"]:
+                if not last_second == int(time.time()):
+                    midi.play(None)
+            else:        
+                midi.play(None)
+    
+        if settings["quantize"]:
+            if not last_second == int(time.time()):
+                last_second = int(time.time())
+                # cv2.circle(frame, (1075,69), 16, (255,255,255), -1)
+                align_text_center(frame, 
+                    ".", 
+                    w // 2, 
+                    90,
+                    20)
         
+        # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, left_hand_gesture, right_hand_gesture, root[1], quality[1])
+            show_overlay(frame, settings["debug"], settings["quantize"], quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
-            cv2.imshow("Jazz Hands (press q to quit)", frame)
-            
-        if cv2.waitKey(1) & 0xFF == ord("q"):
-            break
+            show_overlay(frame, settings["debug"], settings["quantize"])
+
 
 cap.release()
 cv2.destroyAllWindows()
 
-
-
-
-
-
-
-# delete later 
-""" # Which landmark points to connect with lines (the hand skeleton).
-CONNECTIONS = [
-    (0, 1), (1, 2), (2, 3), (3, 4),          # thumb
-    (0, 5), (5, 6), (6, 7), (7, 8),          # index
-    (5, 9), (9, 10), (10, 11), (11, 12),     # middle
-    (9, 13), (13, 14), (14, 15), (15, 16),   # ring
-    (13, 17), (17, 18), (18, 19), (19, 20),  # pinky
-    (0, 17),                                 # palm edge
-]
-
-
-cap = cv2.VideoCapture(0)
-if not cap.isOpened():
-    raise SystemExit("Could not open the webcam.")
-
-start = time.time()
-last_ts = -1
-# open virtual midi port
-with MidiOut() as midi:
-    while True:
-        ok, frame = cap.read()
-        if not ok:
-            break
-        # Mirror the image like a selfie view. If Left/Right look swapped on
-        # your screen, comment out this line.
-        frame = cv2.flip(frame, 1)
-
-        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
-        ts = max(int((time.time() - start) * 1000), last_ts + 1)  # must increase
-        last_ts = ts
-        result = landmarker.detect_for_video(mp_image, ts)
-
-
-    cv2.imshow("Hand demo (press q to quit)", frame)
-    if cv2.waitKey(1) & 0xFF == ord("q"):
-        break """
 
 
 

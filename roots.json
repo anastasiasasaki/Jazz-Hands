@@ -1,8 +1,15 @@
 {
-  "fist":  {"fingers": "0000", "root": "C"},
-  "one":   {"fingers": "1000", "root": "D"},
-  "two":   {"fingers": "1100", "root": "E"},
-  "three": {"fingers": "1110", "root": "F"},
-  "four":  {"fingers": "1111", "root": "G"},
-  "pinky": {"fingers": "0001", "root": "A"}
+  "fist":  {"fingers": "0000", "angle": "1", "root": "C"},
+  "one":   {"fingers": "1000", "angle": "1", "root": "G"},
+  "two":   {"fingers": "1100", "angle": "1", "root": "D"},
+  "three": {"fingers": "1110", "angle": "1", "root": "A"},
+  "four":  {"fingers": "1111", "angle": "1", "root": "E"},
+  "reverse three": {"fingers": "0111", "angle": "1", "root": "B"},
+  
+  "angled reverse three": {"fingers": "0111", "angle": "0", "root": "F#"},
+  "angled four":  {"fingers": "1111", "angle": "0", "root": "C#"},
+  "angled three": {"fingers": "1110", "angle": "0", "root": "Ab"},
+  "angled two":   {"fingers": "1100", "angle": "0", "root": "Eb"},
+  "angled one":   {"fingers": "1000", "angle": "0", "root": "Bb"},
+  "angled fist":  {"fingers": "0000", "angle": "0", "root": "F"}
 }
