@@ -157,10 +157,13 @@ CONNECTIONS = [
 
 # set upp MediaPipe to run independently
 latest_result = None
+landmarker_time = 0
 
 def on_result (result, output_image, timestamp_ms):
-    global latest_result
+    global latest_result, landmarker_time
     latest_result = result
+    # new landmarker latency calculation reuses the VIDEO mode timestamps
+    landmarker_time = (time.time() - start) * 1000 - timestamp_ms
 
 options = vision.HandLandmarkerOptions(
     base_options = mp_python.BaseOptions(model_asset_path = MODEL_PATH),
@@ -181,18 +184,12 @@ if not cap.isOpened():
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
-# # 640 resolution :(
-# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
 # VIDEO mode needs a timestamp in milliseconds for every frame, each new > last 
 # milliseconds since the program started 
 # last_ts force it to go up if two frames land in the same millisecond 
-
 last_ts = -1
-
 start = time.time()
-tick = 0
 
 # makes sure if a program crashes it closes the port instead of playing the note that it's stuck on 
 # "with MidiOut() as midi" opens the virtual MIDI port, and when the block ends (even if the program crashes) it automatically silences and closes the port, so you never get a stuck note 
@@ -214,8 +211,6 @@ last_time = time.time()
 
 with MidiOut() as midi:
     while True:
-        tick += 1
-        # print(tick)
         # check for keypresses
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"): break
@@ -231,20 +226,15 @@ with MidiOut() as midi:
 
         # make sure its the raw video feed, not the flipped one
         # OpenCV uses BGR, MediaPipe wants RGB
-
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)  
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
+        # gives every frame a timestamp in ms for mediapipe
         ts = max(int((time.time() - start) * 1000), last_ts + 1)
         last_ts = ts
         
-        before_landmarker = time.time()
-        # # old landmarker detect that waits
-        # result = landmarker.detect_for_video(mp_image, ts)
         # new landmarker detect that runs asynchronously
         landmarker.detect_async(mp_image, ts)
         result = latest_result
-        after_landmarker = time.time()
-        landmarker_time = after_landmarker - before_landmarker
 
         # mirror the image so left hand is left and right is right 
 
@@ -316,7 +306,7 @@ with MidiOut() as midi:
         # debug view for fps, hand landmarker time, camera resolution
         if settings["debug"]:
             cv2.putText(frame, f"{fps:.0f} fps", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
-            cv2.putText(frame, f"{landmarker_time:.03f} landmarker time", (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, f"{landmarker_time:.0f} landmarker miliseconds", (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
             cv2.putText(frame, f"{int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))} webcam video", (20, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
@@ -337,7 +327,6 @@ with MidiOut() as midi:
         if settings["quantize"]:
             if not last_second == int(time.time()):
                 last_second = int(time.time())
-                # cv2.circle(frame, (1075,69), 16, (255,255,255), -1)
                 align_text_center(frame, 
                     ".", 
                     w // 2, 
