@@ -147,14 +147,28 @@ CONNECTIONS = [
     (0, 17),                                 # palm edge
 ]
 
-# set up MediaPipe. VIDEO mode = hand it one frame at a time and wait
-# needs each frame to come with a timestamp 
+# # set up MediaPipe. VIDEO mode = hand it one frame at a time and wait
+# # needs each frame to come with a timestamp 
+# options = vision.HandLandmarkerOptions(
+#     base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
+#     running_mode=vision.RunningMode.VIDEO,
+#     num_hands=2,
+# )
+
+# set upp MediaPipe to run independently
+latest_result = None
+
+def on_result (result, output_image, timestamp_ms):
+    global latest_result
+    latest_result = result
 
 options = vision.HandLandmarkerOptions(
-    base_options=mp_python.BaseOptions(model_asset_path=MODEL_PATH),
-    running_mode=vision.RunningMode.VIDEO,
-    num_hands=2,
+    base_options = mp_python.BaseOptions(model_asset_path = MODEL_PATH),
+    running_mode = vision.RunningMode.LIVE_STREAM,
+    num_hands = 2,
+    result_callback = on_result,
 )
+
 
 landmarker = vision.HandLandmarker.create_from_options(options)
 
@@ -166,6 +180,10 @@ if not cap.isOpened():
 # 720p resoukltion :D
 cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
+# # 640 resolution :(
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
 # VIDEO mode needs a timestamp in milliseconds for every frame, each new > last 
 # milliseconds since the program started 
@@ -220,7 +238,11 @@ with MidiOut() as midi:
         last_ts = ts
         
         before_landmarker = time.time()
-        result = landmarker.detect_for_video(mp_image, ts)
+        # # old landmarker detect that waits
+        # result = landmarker.detect_for_video(mp_image, ts)
+        # new landmarker detect that runs asynchronously
+        landmarker.detect_async(mp_image, ts)
+        result = latest_result
         after_landmarker = time.time()
         landmarker_time = after_landmarker - before_landmarker
 
@@ -244,7 +266,8 @@ with MidiOut() as midi:
         left_hand_gesture = None
         right_hand_gesture = None
 
-        for lm, handed in zip(result.hand_landmarks, result.handedness):
+        hands = zip(result.hand_landmarks, result.handedness) if result else []
+        for lm, handed in hands:
             label = handed[0].category_name  # "Left" or "Right"
 
             
@@ -290,10 +313,11 @@ with MidiOut() as midi:
                 cv2.putText(frame, text, (20, 160),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-        # debug view for fps, hand landmarker time
+        # debug view for fps, hand landmarker time, camera resolution
         if settings["debug"]:
             cv2.putText(frame, f"{fps:.0f} fps", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
             cv2.putText(frame, f"{landmarker_time:.03f} landmarker time", (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, f"{int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))} webcam video", (20, 240), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
