@@ -3,7 +3,7 @@ import json
 import math 
 import time 
 import urllib.request
-from midi_out import MidiOut, chord, CHORDS
+from midi_out import MidiOut, chord, CHORDS, set_volume
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
