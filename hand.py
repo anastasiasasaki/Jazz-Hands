@@ -12,6 +12,10 @@ from live_overlay import show_overlay
 from utilities import align_text_center
 
 
+
+print([line for line in cv2.getBuildInformation().splitlines() if "GUI:" in line])
+
+
 MODEL_PATH = "hand_landmarker.task"
 MODEL_URL = ("https://storage.googleapis.com/mediapipe-models/"
              "hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task")
@@ -163,8 +167,10 @@ if not cap.isOpened():
 # milliseconds since the program started 
 # last_ts force it to go up if two frames land in the same millisecond 
 
-start = time.time()
 last_ts = -1
+
+start = time.time()
+tick = 0
 
 # makes sure if a program crashes it closes the port instead of playing the note that it's stuck on 
 # "with MidiOut() as midi" opens the virtual MIDI port, and when the block ends (even if the program crashes) it automatically silences and closes the port, so you never get a stuck note 
@@ -186,6 +192,8 @@ last_time = time.time()
 
 with MidiOut() as midi:
     while True:
+        tick += 1
+        # print(tick)
         # check for keypresses
         key = cv2.waitKey(1) & 0xFF
         if key == ord("q"): break
@@ -194,7 +202,7 @@ with MidiOut() as midi:
 
 
 
-        
+        # reads the video frame from the webcam
         ok, frame = cap.read()
         if not ok:
             break
@@ -206,7 +214,12 @@ with MidiOut() as midi:
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         ts = max(int((time.time() - start) * 1000), last_ts + 1)
         last_ts = ts
+        
+        
+        before_landmarker = time.time()
         result = landmarker.detect_for_video(mp_image, ts)
+        after_landmarker = time.time()
+        landmarker_time = after_landmarker - before_landmarker
 
         # mirror the image so left hand is left and right is right 
 
@@ -214,9 +227,10 @@ with MidiOut() as midi:
         h, w = frame.shape[:2]
         
         # fps counter
-        now = time.time()
-        fps = 1 / (now - last_time)
-        last_time = now
+        if settings["debug"]:
+            now = time.time()
+            fps = 1 / (now - last_time)
+            last_time = now
         
 
         # each frame starts without a chord 
@@ -269,13 +283,14 @@ with MidiOut() as midi:
 
             # debug view for right hand angle 
             if label == "Right" and settings["debug"]:
-                text = f"right hand angle: {palm_spread_angle(lm, w, h)}"
+                text = f"right hand angle: {angle:.01f}"
                 cv2.putText(frame, text, (20, 160),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
-        # debug view for fps
+        # debug view for fps, hand landmarker time
         if settings["debug"]:
             cv2.putText(frame, f"{fps:.0f} fps", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+            cv2.putText(frame, f"{landmarker_time:.03f} landmarker time", (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
 
         # play chord, or silence if current is None (midi.play(None) turns off whatever is playing) 
         # midi_out.py ignores repeats of the same chord, so calling this every frame is fine 
