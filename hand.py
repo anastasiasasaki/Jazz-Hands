@@ -163,6 +163,10 @@ cap = cv2.VideoCapture(0)
 if not cap.isOpened():
     raise SystemExit("Could not open the webcam.")
 
+# 720p resoukltion :D
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
 # VIDEO mode needs a timestamp in milliseconds for every frame, each new > last 
 # milliseconds since the program started 
 # last_ts force it to go up if two frames land in the same millisecond 
@@ -214,7 +218,6 @@ with MidiOut() as midi:
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         ts = max(int((time.time() - start) * 1000), last_ts + 1)
         last_ts = ts
-        
         
         before_landmarker = time.time()
         result = landmarker.detect_for_video(mp_image, ts)
