@@ -335,7 +335,7 @@ with MidiOut() as midi:
         
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, settings["debug"], settings["quantize"], quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
+            show_overlay(frame, settings["debug"], settings["quantize"], volume, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
             show_overlay(frame, settings["debug"], settings["quantize"])
 
