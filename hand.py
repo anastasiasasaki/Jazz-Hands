@@ -159,6 +159,8 @@ CONNECTIONS = [
 latest_result = None
 landmarker_time = 0
 
+volume = 0
+
 def on_result (result, output_image, timestamp_ms):
     global latest_result, landmarker_time
     latest_result = result
