@@ -3,7 +3,7 @@ import json
 import math 
 import time 
 import urllib.request
-from midi_out import MidiOut, chord, CHORDS
+from midi_out import MidiOut, chord, CHORDS, set_volume
 import cv2
 import mediapipe as mp
 from mediapipe.tasks import python as mp_python
@@ -158,6 +158,8 @@ CONNECTIONS = [
 # set upp MediaPipe to run independently
 latest_result = None
 landmarker_time = 0
+
+volume = 0
 
 def on_result (result, output_image, timestamp_ms):
     global latest_result, landmarker_time
@@ -335,7 +337,7 @@ with MidiOut() as midi:
         
         # show the overlay
         if right_hand_gesture and left_hand_gesture and quality and root:
-            show_overlay(frame, settings["debug"], settings["quantize"], quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
+            show_overlay(frame, settings["debug"], settings["quantize"], volume, quality[0], left_hand_gesture, root[0], right_hand_gesture, root[1], quality[1])
         else:
             show_overlay(frame, settings["debug"], settings["quantize"])
 

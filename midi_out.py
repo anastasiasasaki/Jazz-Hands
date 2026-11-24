@@ -34,6 +34,15 @@ def chord(quality, root, octave = 3):
     
     return [root_note + i for i in CHORDS[quality]]
 
+# sets volume using CC7 channel volume control, NOT velocity
+# only sets the volume if value is different than current volume
+def set_volume (self, value):
+    # 0-127 volumes
+    value = max (0, min(127, int(value)))
+    if value != getattr(self, "current_volume", None):
+        self.port.send(mido.Message('control_change', control = 7, value = value))
+        self.current_volume = value
+
 
 class MidiOut:
     """ def __init__(self, name = 'Jazz Hands Port'):

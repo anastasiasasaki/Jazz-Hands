@@ -6,13 +6,14 @@ WINDOW_NAME = "Jazz Hands (press q to quit, d for debug, w for quantize)"
 def show_overlay(frame, 
                 debug,
                 quantize,
+                volume=0,
                 left_hand_name="-", 
                 left_hand="-", 
                 right_hand_name="-",
                 right_hand="-", 
                 root="-", 
-                quality="-",
-                volume=0):
+                quality="-"
+                ):
 
     # reads the frame's size in pixels
     # frame is a numpy array or something
@@ -63,6 +64,12 @@ def show_overlay(frame,
     cv2.putText(frame, f"Volume: {volume}%",
                 (20, 120), cv2.FONT_HERSHEY_SIMPLEX,
                 0.8, (0, 255, 0), 2)
+
+    bar_width = round(200 * max(0, min(100, volume)) / 100)
+    cv2.rectangle(frame, (20, 130), (220, 140), (60, 60, 60), -1)
+    if bar_width > 0:
+        cv2.rectangle(frame, (20, 130), (20 + bar_width, 140), (0, 255, 0), -1)
+    cv2.rectangle(frame, (20, 130), (220, 140), (200, 200, 200), 1)
 
     cv2.imshow(WINDOW_NAME, frame)
 
