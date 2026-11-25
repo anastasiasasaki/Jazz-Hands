@@ -11,7 +11,7 @@ def show_overlay(frame, left_hand="Unknown", right_hand="Unknown", root="None", 
     frame = frame.copy()
 
     overlay = frame.copy()
-    cv2.rectangle(overlay, (10,10), (300,190), (30,30,30), -1)
+    cv2.rectangle(overlay, (10,10), (500,200), (30,30,30), -1)
     cv2.addWeighted(overlay, 0.3, frame, 0.7, 0, frame)
 
     cv2.putText(frame, f"Left hand: {left_hand}",
