@@ -301,7 +301,7 @@ with MidiOut() as midi:
                     right_palm_angle = "0"
 
                 set_volume(midi, vol_calculate(lm, h))
-                volume = midi.current_volume
+                volume = round((midi.current_volume / 127) * 100, 1)
                     
                 right_hand_gesture = finger_states(lm)
                 root = GESTURES_RIGHT_HAND.get((right_hand_gesture, right_palm_angle))
