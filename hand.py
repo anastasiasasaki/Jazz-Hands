@@ -37,7 +37,8 @@ if not os.path.exists(MODEL_PATH):
 
 settings = {
     "debug": False,
-    "quantize": True
+    "quantize": False,
+    "volume": False
 }
 
 
@@ -300,8 +301,9 @@ with MidiOut() as midi:
                 elif angle <= -3:
                     right_palm_angle = "0"
 
-                set_volume(midi, vol_calculate(lm, h))
-                volume = round((midi.current_volume / 127) * 100, 1)
+                if settings["volume"]:
+                    set_volume(midi, vol_calculate(lm, h))
+                    volume = round((midi.current_volume / 127) * 100, 1)
                     
                 right_hand_gesture = finger_states(lm)
                 root = GESTURES_RIGHT_HAND.get((right_hand_gesture, right_palm_angle))
