@@ -78,7 +78,6 @@ Toggle 'W' to enable / disable visual feedback of quantization.
 
 
 ## Material: 
-You can use any DAW or software-based musical instrument.
-https://www.onlinepianist.com/virtual-piano is an option that runs in your browser.
-
-
+You can use any DAW or software-based musical instrument and listen for the `Jazz Hands Port` port.
+https://www.onlinepianist.com/virtual-piano is an option that runs in your browser. 
+If a virtual MIDI port is needed, download loopMIDI from https://www.tobias-erichsen.de/software/loopmidi.html and use it to listen for `Jazz Hands Port`. 
