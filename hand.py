@@ -138,6 +138,7 @@ def palm_spread_angle(lm, w, h):
 
 
 # calculates volume as percentage based on palm center height relative to window size
+# volume is in ints from 0-127 because of how CC7 midi channel volume operates
 def vol_calculate(lm, h):
     # convert to pixels
     wy = lm[0].y * h
@@ -149,12 +150,12 @@ def vol_calculate(lm, h):
     max_h = h / 2  # 100% when palm is at or higher than halfway up from bottom
     min_h = h - h / 5  # 0% when palm center is at or lower than a fifth from bottom
 
-    if palm_height > max_h:
+    if palm_height < max_h:
         return 127
-    if palm_height < min_h:
+    if palm_height > min_h:
         return 0
 
-    return int((min_h + palm_height * (max_h - min_h) / 100)) * 127
+    return int(127 * (min_h - palm_height) / (min_h - max_h))
 
 # which landmark pairs to connect with lines (skeleton) 
 
@@ -299,7 +300,8 @@ with MidiOut() as midi:
                 elif angle <= -3:
                     right_palm_angle = "0"
 
-                volume = set_volume(volume, vol_calculate(lm, h))
+                set_volume(midi, vol_calculate(lm, h))
+                volume = midi.current_volume
                     
                 right_hand_gesture = finger_states(lm)
                 root = GESTURES_RIGHT_HAND.get((right_hand_gesture, right_palm_angle))
