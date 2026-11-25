@@ -30,6 +30,8 @@ python hand.py
 - Adjust MIDI quality using left hand gestures
 - Output to DAW or online synthesizers
 
+The program needs good lighting and two clear hands (right and left) to work successfully. Additionally, the latency is slightly longer than desired but should not noticeably affect user performance. 
+
 ## Controls:
 Perform these gestures in order to control the MIDI output.
 ### Right Hand: Roots
