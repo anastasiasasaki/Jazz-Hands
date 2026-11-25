@@ -70,9 +70,15 @@ Palm direction here does not matter.
 |Index, Middle, Ring, Pinky|7th|
 |Middle, Ring, Pinky|Major 7th|
 
+Press 'Q' to exit program. 
 
+### Debug controls 
+Toggle 'D' for debug. 
+Toggle 'W' to enable / disable visual feedback of quantization. 
 
 
 ## Material: 
 You can use any DAW or software-based musical instrument.
 https://www.onlinepianist.com/virtual-piano is an option that runs in your browser.
+
+
