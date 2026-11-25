@@ -136,6 +136,27 @@ def palm_spread_angle(lm, w, h):
 
     return math.degrees(math.atan2(cross, dot))
 
+# grabs height of center of palm
+def palm_height(lm, h):
+    # convert to pixels
+    wy = lm[0].y * h
+    my = lm[9].y * h
+
+    # average of wrist and middle knuckle should be about center of palm
+    return (wy + my) / 2
+
+# takes palm height and calculates volume as percentage based on screen position
+def vol_calculate(p_avg, h):
+    max_h = h / 2     # 100% when palm is at or higher than halfway up from bottom
+    min_h = h - h / 5 # 0% when palm center is at or lower than a fifth from bottom
+
+    if p_avg > max_h:
+        return 1
+    if p_avg < min_h:
+        return 0
+
+    return (min_h + p_avg(max_h - min_h)) / 100
+
 # which landmark pairs to connect with lines (skeleton) 
 
 CONNECTIONS = [
@@ -238,8 +259,7 @@ with MidiOut() as midi:
         landmarker.detect_async(mp_image, ts)
         result = latest_result
 
-        # mirror the image so left hand is left and right is right 
-
+        # mirror the image so left hand is left and right is right
         frame = cv2.flip(frame, 1)
         h, w = frame.shape[:2]
         
@@ -279,6 +299,8 @@ with MidiOut() as midi:
                     right_palm_angle = "1" 
                 elif angle <= -3:
                     right_palm_angle = "0"
+
+                volume = set_volume(volume, vol_calculate(palm_height(lm, h), h))
                     
                 right_hand_gesture = finger_states(lm)
                 root = GESTURES_RIGHT_HAND.get((right_hand_gesture, right_palm_angle))
