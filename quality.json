@@ -1,8 +1,8 @@
 {
   "fist":  {"fingers": "0000", "quality": "maj"},
   "one":   {"fingers": "1000", "quality": "min"},
-  "two":   {"fingers": "1100", "quality": "aug"},
-  "three": {"fingers": "1110", "quality": "dim"},
+  "two":   {"fingers": "1100", "quality": "min7"},
+  "three": {"fingers": "1110", "quality": "m7b5"},
   "four":  {"fingers": "1111", "quality": "7"},
   "reverse three": {"fingers": "0111", "quality": "maj7"}
 }
