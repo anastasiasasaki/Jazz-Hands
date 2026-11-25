@@ -12,8 +12,7 @@ GitHub site: https://github.com/anastasiasasaki/Jazz-Hands
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install mediapipe opencv-python
-pip install mido python-rtmidi
+python -m pip install mediapipe opencv-python mido python-rtmidi
 python3 hand.py
 ```
 
@@ -22,7 +21,7 @@ python3 hand.py
 python -m venv .venv
 .venv\Scripts\activate
 python -m pip install --upgrade pip
-pip install opencv-python mediapipe mido python-rtmidi
+python -m pip install opencv-python mediapipe mido python-rtmidi
 python hand.py
 ```
 
