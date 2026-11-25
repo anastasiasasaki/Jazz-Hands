@@ -69,7 +69,7 @@ Palm direction here does not matter.
 |Index, Middle|min7|
 |Index, Middle, Ring|m7b5|
 |Index, Middle, Ring, Pinky|7th|
-|Pinky|Major 7th|
+|Middle, Ring, Pinky|Major 7th|
 
 
 ## TODO: 
