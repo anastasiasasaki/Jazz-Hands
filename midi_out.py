@@ -36,6 +36,7 @@ def chord(quality, root, octave = 3):
 
 # sets volume using CC7 channel volume control, NOT velocity
 # only sets the volume if value is different than current volume
+# self is the midiout object
 def set_volume (self, value):
     # 0-127 volumes
     value = max (0, min(127, int(value)))
