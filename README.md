@@ -66,8 +66,8 @@ Palm direction here does not matter.
 |:---|---:|
 |Fist|Major|
 |Index|Minor|
-|Index, Middle|min7|
-|Index, Middle, Ring|m7b5|
+|Index, Middle|Minor 7th|
+|Index, Middle, Ring|Minor 7th flat 5|
 |Index, Middle, Ring, Pinky|7th|
 |Middle, Ring, Pinky|Major 7th|
 
