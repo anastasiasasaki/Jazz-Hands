@@ -34,20 +34,42 @@ python hand.py
 ## Controls:
 Perform these gestures in order to control the MIDI output.
 ### Right Hand: Roots
-Fist: C\
-Index: D\
-Index, Middle: E\
-Index, Middle, Ring: F\
-Index, Middle, Ring, Pinky: G\
-Pinky: A
+
+
+Palm facing backwards:
+
+|Gesture|Root|
+|:---|---:|
+|Fist|C|
+|Index|G|
+|Index, Middle|D|
+|Index, Middle, Ring|A|
+|Index, Middle, Ring, Pinky|E|
+|Middle, Ring, Pinky|B|
+
+Palm facing forwards:
+
+|Gesture|Root|
+|:---|---:|
+|Middle, Ring, Pinky|F#|
+|Index, Middle, Ring, Pinky|C#|
+|Index, Middle, Ring|Ab|
+|Index, Middle|Eb|
+|Index|Bb|
+|Fist|F|
 
 ### Left Hand: Qualities
-Fist: Major\
-Index: Minor\
-Index, Middle: Augmented\
-Index, Middle, Ring: Diminished\
-Index, Middle, Ring, Pinky: 7th Chord\
-Pinky: Major 7th Chord
+
+Palm direction here does not matter.
+
+|Gesture|Quality|
+|:---|---:|
+|Fist|Major|
+|Index|Minor|
+|Index, Middle|Augmented|
+|Index, Middle, Ring|Diminished|
+|Index, Middle, Ring, Pinky|7th|
+|Pinky|Major 7th|
 
 
 ## TODO: 
