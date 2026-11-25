@@ -71,10 +71,7 @@ Palm direction here does not matter.
 |Middle, Ring, Pinky|Major 7th|
 
 
-## TODO: 
-- Finalize Windows compatibility
-- Deploy the application
-- Finalize report after polishing program
+
 
 ## Material: 
 You can use any DAW or software-based musical instrument.
