@@ -138,6 +138,7 @@ def palm_spread_angle(lm, w, h):
 
 
 # calculates volume as percentage based on palm center height relative to window size
+# volume is in ints from 0-127 because of how CC7 midi channel volume operates
 def vol_calculate(lm, h):
     # convert to pixels
     wy = lm[0].y * h
