@@ -150,11 +150,11 @@ def vol_calculate(lm, h):
     min_h = h - h / 5  # 0% when palm center is at or lower than a fifth from bottom
 
     if palm_height > max_h:
-        return 1
+        return 127
     if palm_height < min_h:
         return 0
 
-    return (min_h + palm_height(max_h - min_h)) / 100
+    return int((min_h + palm_height * (max_h - min_h) / 100)) * 127
 
 # which landmark pairs to connect with lines (skeleton) 
 
